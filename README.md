@@ -1,88 +1,152 @@
-# 2028 AI 硕士动态择校系统 — Phase 4.0 / 4.1 / 5.0
+# 2028 AI 硕士动态择校决策系统 · v1.0.0
 
-数据架构、证据治理、独立决策引擎（Phase 4.0）+ Streamlit Web MVP（Phase 4.1）+ 北邮试点数据迁移（Phase 5.0）。
+> 面向「只有一次考研机会」的 2028 级 AI 相关全日制硕士择校：先看证据，再看偏好，最后才谈比较。
+
+本项目已完成预期目标并发布 **v1.0.0**。它把分散的历史招生研究（导师、平台、就业、历史统考名额）
+整合为可核查的证据，并给出一份**面向考生**的择校结论——同时严格区分两类信息：
+
+- 🟦 **历史研究判断**：基于 2023–2027 各校官网/学院级资料，证明"资源真实存在"，**不等于 2028 官方招生确认**。
+- 🟥 **2028 正式招生资格**：截至 v1.0.0，五校 2028 目录均未发布，全部路径"2028 资格未确认"。
 
 ---
 
 ## ⚠️ 重要声明：本系统不是录取概率预测工具
 
-> **当前系统是研究与决策辅助工具，不是录取概率预测工具，也不是院校排名产品。**
+> **本系统是研究与决策辅助工具，不是录取概率预测工具，也不是院校排名产品。**
 
-- 系统**从不输出、也拒绝输出**任何录取概率 / 上岸率 / 录取率（由 `engine/pipeline.py`
-  的 `assert_no_admission_probability` 与 9 项单测强制）。
-- 当前 10 条路径**全部处于「硬约束待确认-不可比较」**，基础覆盖率 0.000 —— 这是**正确行为**，
-  不是缺陷：2028 招生资格未确认、87 个来源中 84 个无本体登记、56 条声明中仅 6 条已核验、
-  180 条评分记录有效性全部为「未知」。
-- 权重为**演示配置**（`is_demo=True`），**尚未确认为用户真实偏好**。
-- **后续开发方向尚未确定**：使用者反馈「更像数据管理后台，而不是择校助手」，
-  功能开发已暂停，代码正移交独立审查（见 `docs/CHAIN_CODE_REVIEW_HANDOFF.md`）。
+- 系统**从不输出、也拒绝输出**任何录取概率 / 上岸率 / 录取率（由 `engine/pipeline.py` 的
+  `assert_no_admission_probability` 与单元测试强制）。
+- 缺失数据不补零；空白评分保持"未知"，不计入分子分母。
+- 候选证据映射永不自动升级为已核验证据；来源冲突保留记录，不自动覆盖旧事实。
+- 历史候选 ≠ 2028 正式资格。所有"无法判断"均为证据不足时的正确系统行为。
 
 ---
 
-## 快速开始（干净环境）
+## 快速开始（从 GitHub 克隆的最简路径）
 
 ```bash
+# 1) 克隆
+git clone https://github.com/w1nterdec/ai-master-decision.git
+cd ai-master-decision
+
+# 2) 创建虚拟环境并安装（含开发依赖）
 python3.11 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 
-# 1) 导入 Phase 3.7C Excel（可重复执行，幂等）
+# 3) 从已入库的研究原件重建 SQLite 数据库（幂等，可重复执行）
 python scripts/import_excel.py --replay-check
 
-# 2) 运行独立决策引擎（命令行）
-python scripts/run_decision.py
+# 4) 导出「择校结果总览」与报告共用的整合研究数据 JSON（纯投影，幂等）
+python scripts/export_consolidated.py
 
-# 3) 启动 Streamlit Web MVP（Phase 4.1）
+# 5) 启动 Streamlit Web（默认 http://localhost:8501）
 streamlit run app.py
-#   默认 http://localhost:8501
 
-# 4) 跑测试（含 UI 真实渲染测试）
+# 6) 跑测试
 pytest
-
-# 5) 生成数据库结构说明
-python scripts/describe_schema.py --out reports/db_schema.md
 ```
 
-产出：
-
-| 文件 | 内容 |
-|---|---|
-| `data/decision.db` | SQLite 数据库 |
-| `reports/import_report.json` | 导入报告（含幂等校验） |
-| `reports/decision_report.json` | 10 条路径的决策输出 |
-| `reports/db_schema.md` | 数据库结构说明 |
+> **"择校结果总览"页不依赖数据库**：它只读 `data/school_research_consolidated.json`。
+> 即使跳过第 3 步（不建库），该页也能正常打开；其余决策页面需要第 3 步生成的数据库。
+> 数据库**不入库**（见 `.gitignore` 的 `data/*.db`），但研究原件 `data/raw/*.xlsx` 已入库，可随时重建。
 
 ---
 
-## 交付物对照
+## 功能概览
 
-| Phase 4.0 要求 | 位置 |
-|---|---|
-| 完整 Python 项目源码 | `src/decision_system/` |
-| SQLite 数据库及结构说明 | `data/decision.db` + `docs/data_dictionary.md` + `reports/db_schema.md` |
-| 数据导入脚本 | `scripts/import_excel.py` + `src/decision_system/importers/` |
-| 独立决策引擎 | `src/decision_system/engine/`（零 UI / 零 ORM 依赖） |
-| pytest 自动化测试 | `tests/`（unit / integration / golden） |
-| 测试结果报告 | `reports/test_report.md` |
-| 架构说明文档 | `docs/architecture.md` |
-| 决策规则规范 | `docs/decision_rules.md` |
-| 数据字典 | `docs/data_dictionary.md` |
-| 已知限制与下一阶段建议 | `docs/known_limitations.md` |
+入口：`app.py`（项目根目录）。侧边栏导航：
+
+| 侧边栏 | 页面文件 | 能力 |
+|---|---|---|
+| ① 决策驾驶舱 | `src/decision_system/ui/pages_cockpit.py` | 路径总览、资格闸门、四层决策解释 |
+| ② 院校探索 | `src/decision_system/ui/pages_explore.py` | 按学校/学院/专业筛选路径与证据 |
+| ③ 多校对比 | `src/decision_system/ui/pages_compare.py` | 多条路径横向比较（缺失值不补零） |
+| ④ 动态决策树 | `src/decision_system/ui/pages_tree.py` | 情景化决策引导 |
+| ⑤ 风险与路径规划 | `src/decision_system/ui/pages_risk.py` | 考研风险与一次机会策略 |
+| ⑥ 我的决策档案 | `src/decision_system/ui/pages_profile.py` | 用户偏好与标记（本地，不改证据） |
+| **⑦ 择校结果总览** | `src/decision_system/ui/pages_result.py` | **最终结论页**：重点研究对象 / 五校对比矩阵 / 学校详细分析 / 一次考研策略 / 决策敏感性 |
+| ⚙️ 高级功能 | `pages_evidence/pages_paths/pages_model/pages_analysis/pages_overview` | 证据登记核验、数据维护、模型参数、决策分析、系统状态 |
+
+**面向考生的最终结论**集中在两处，二者同源（均读 `data/school_research_consolidated.json`）：
+
+- Web：**⑦ 择校结果总览**（移动端优先，🟦/🟥 双层展示）。
+- 文档：**`docs/2028_AI_MASTER_DECISION_REPORT.md`**（15 节，含 Q1–Q8 问答）。
 
 ---
 
-## 设计原则
+## 数据结构
+
+### 1) SQLite 数据库（由研究原件重建，非手工维护）
+
+| 表 | 内容 |
+|---|---|
+| `school` / `college` / `program` | 学校 / 学院 / 专业代码 |
+| `admission_path` | 招生路径（学校+学院+专业+方向+年份+方式+路径角色，含 2028 核验状态） |
+| `evidence_source` / `evidence_claim` / `claim_path_link` | 来源登记 / 证据声明 / 声明-路径关联 |
+| `indicator` / `score_record` | 三级指标树 / 评分记录（未知保持未知） |
+| `admission_record` / `mentor` / `research_resource` | 招生记录 / 导师 / 科研资源（当前为空，待补充） |
+| `weight_profile` / `scenario` | 权重配置 / 情景倍率 |
+| `audit_log` | 每次写入留痕（actor / action / detail） |
+
+> 重建命令：`python scripts/import_excel.py --excel data/raw/Phase3_7C_情景覆盖率门槛修复版.xlsx --db data/decision.db --replay-check`
+> 导入**幂等**（`get_or_create` 自然键），重复执行不产生重复记录，也**不覆盖、不删除**已有历史记录。
+
+### 2) 整合研究数据 JSON（Web 与报告的单一可信源）
+
+`data/school_research_consolidated.json` 由 `scripts/export_consolidated.py` 从 Excel 投影生成：
+
+```jsonc
+{
+  "source_file": "data/raw/Phase3_7C_情景覆盖率门槛修复版.xlsx",
+  "source_year_note": "研究证据多为 2023–2027 历史事实/学院级资源；均非 2028 官方招生资格确认",
+  "paths": [ { "path_id":"P01", "school":"北京邮电大学", "college":"005",
+               "program":"085410", "direction":"方向01", "exam4":"801 通信原理",
+               "city":"北京", "verify2028":"待2028核验", "risk":"…",
+               "admission_status":"待确认", "qual2028":"2028资格未确认", "note":"…" }, … ],
+  "research_by_path": { "P01": [ { "path_id":"P01", "school":"…", "college":"…",
+               "program":"…", "indicator":"岗位与实习机会", "stage":"2D资源",
+               "theme":"D4-就业与产业连接", "statement":"…原文…", "source_id":"…",
+               "grade":"S4", "accessibility":"P3", "verify_status":"线索(全校级)",
+               "match_limit":"…", "score_status":"待人工评价" }, … ], … },
+  "research_flat": [ … 207 条全部证据 … ],
+  "open_questions": [ "P0 | 北邮005 | 2027目录原件… | 备考路径 | 已闭合（原：未闭合）", … ]
+}
+```
+
+- 证据等级 `grade`：S1 官方/目录级 · S2 学院级已证实资源 · S3 实验室/研究院级 · S4 全校级线索。
+- 该文件是**派生产物**（可由 Excel 重生成），既入库便于直接运行，也保留可重建性。
+
+---
+
+## 如何追加院校与研究数据
+
+数据更新**不会覆盖已有研究记录**（导入幂等 + 投影导出），追加流程如下：
+
+1. **改源表**：在 `data/raw/Phase3_7C_情景覆盖率门槛修复版.xlsx` 中
+   - `路径` 表：新增一行（路径ID / 学校 / 学院码 / 专业码 / 方向 / 初试第四单元 / 培养地 / 2028核验状态 / 关键风险 / 资格说明…）；
+   - `3_2证据映射候选` 表：追加证据行，用 `路径ID` 关联到对应路径。
+2. **重建数据库**（幂等，保留旧记录）：`python scripts/import_excel.py --replay-check`
+3. **重导整合 JSON**（纯投影，不丢弃任何研究行）：`python scripts/export_consolidated.py`
+4. **同步结论文本**：`docs/2028_AI_MASTER_DECISION_REPORT.md` 与 `pages_result.py` 中的
+   定性判断（重点分组 `FOCUS_GROUP`、对比矩阵 `MATRIX`、策略 `STRATEGY`、敏感性 `SENSITIVITY`）
+   为**分析师人工撰写的结论**，不会自动生成——新增院校后需同步修订这两处的对应段落。
+5. Web 与报告均读整合 JSON，结构化证据自动同步；上述第 4 步保证结论与数据一致。
+
+> 数据库导入脚本在**冲突时只记录、不覆盖旧事实**；不同年份记录互不覆盖（由
+> `test_21_different_years_do_not_overwrite` 强制）。
+
+---
+
+## 设计原则（由代码与测试强制）
 
 > 正确性 > 可追溯性 > 可测试性 > 可维护性 > 界面美观
 
-硬性约束（由代码与测试强制）：
-
 - 决策引擎不输出任何录取概率（`assert_no_admission_probability` 自检）。
-- 缺失数据不补零；空白评分保持「未知」，不计入分子分母。
+- 缺失数据不补零；空白评分保持"未知"，不计入分子分母。
 - 候选证据映射永不自动升级为已核验证据。
 - 来源冲突保留记录，不自动覆盖旧事实。
 - 历史候选 ≠ 2028 正式资格。
 - 每个情景/目标用**自身**覆盖率判断是否输出评分。
-- 双目标（A 是否值得读 / B 是否值得押唯一一次机会）独立输出。
 
 ---
 
@@ -95,168 +159,51 @@ python scripts/describe_schema.py --out reports/db_schema.md
 | `engine/coverage.py` | 覆盖率与加权平均（缺失不入分母） |
 | `engine/scenarios.py` | 情景倍率与独立归一化 |
 | `engine/objectives.py` | 双目标相关度矩阵 + 必备分组门槛 |
-| `engine/pipeline.py` | 门面：PathContext → PathDecision |
+| `engine/pipeline.py` | 门面：PathContext → PathDecision（含禁概率自检） |
 | `evidence/gate.py` | 严格闸门 / Excel 兼容闸门（仅测试） |
-| `evidence/registry.py` | 来源与声明登记、冲突治理、人工核验唯一入口 |
+| `evidence/registry.py` | 来源与声明登记、冲突治理、人工核验唯一入口（幂等 upsert） |
 | `importers/excel_importer.py` | Excel → SQLite，幂等，不做推断 |
 | `services/` | DB 会话、路径身份、装配层、权重修改审计 |
+| `ui/pages_result.py` | **⑦ 择校结果总览**（只读整合 JSON，无评分逻辑） |
 
 ---
 
-## 测试分层
+## 测试
+
+`pytest` → **294 passed**（单元 / 集成 / 黄金比对 / UI 真实渲染）。
 
 | 目录 | 内容 |
 |---|---|
 | `tests/unit/` | 权重、证据闸门、覆盖率、硬约束、双目标、引擎（纯内存，无 DB 依赖） |
-| `tests/integration/` | 导入幂等、不同年份/学院/路径角色不混淆、DB 驱动端到端、权重修改审计 |
-| `tests/golden/` | 与 Phase 3.7C Excel/LibreOffice 实测结果逐格比对（4 个场景） |
-
-黄金基线：`data/raw/Phase3_7C_实际回归测试结果.json`（Phase 3.7C 端到端回归实测值）。
-
-关于严格性差异：Python 引擎默认严格闸门**比旧 Excel 更严格**；黄金测试使用
-`LegacyPhase37CGate` 复现 Excel 的"格式有效"语义做数值对齐，详见 `docs/decision_rules.md` R3
-与 `docs/known_limitations.md` 第四节。
+| `tests/integration/` | 导入幂等、不同年份/学院/路径角色不混淆、DB 端到端、权重修改审计 |
+| `tests/golden/` | 与 Phase 3.7C Excel/LibreOffice 实测结果逐格比对 |
+| `tests/ui/` | 用 `streamlit.testing.v1.AppTest` **真实渲染**页面并模拟交互 |
 
 ---
 
-## 当前状态速览（由 `scripts/run_decision.py` 实测）
-
-```
-P01..P10  准入=待核验  2028=2028资格未确认  基础覆盖=0.000  状态=硬约束待确认-不可比较
-```
-
-解锁评分输出的前置条件见 `docs/known_limitations.md` 第五节 P0 项。
-
----
-
-# Phase 4.1｜Streamlit Web MVP
-
-## 启动
+## 部署
 
 ```bash
 pip install -e ".[dev]"
 streamlit run app.py
 ```
 
-入口文件：**`app.py`**（项目根目录）。默认读取 `data/decision.db`；
-可用环境变量 `DECISION_DB_PATH` 指向其它库（UI 测试即用它指向临时库）：
-
-```bash
-DECISION_DB_PATH=/tmp/my.db streamlit run app.py
-```
-
-## 五个页面
-
-| 侧边栏 | 文件 | 能力 |
-|---|---|---|
-| ① 项目总览 | `src/decision_system/ui/pages_overview.py` | 8 项状态指标 + 基于真实 DB 的下一步待办 |
-| ② 招生路径 | `src/decision_system/ui/pages_paths.py` | 10 条路径全字段、学校/学院/专业代码筛选、详情、证据、缺失数据、历史记录 |
-| ③ 证据管理 | `src/decision_system/ui/pages_evidence.py` | 来源登记 / 证据关联 / 人工核验（通过·驳回·冲突）/ 缺口统计 |
-| ④ 决策模型 | `src/decision_system/ui/pages_model.py` | 三级权重树、组内归一与全局权重、调整预览、保存、派生用户配置、恢复默认、修改记录 |
-| ⑤ 决策分析 | `src/decision_system/ui/pages_analysis.py` | 三情景 + A/B 双目标、覆盖率与门槛、缺失指标、证据不足时不排名 |
-
-## 新增依赖及原因
-
-| 依赖 | 原因 |
-|---|---|
-| `streamlit>=1.30` | 任务书指定的 Web 框架；本阶段交付形态为可操作 Web 工作台 |
-| `pandas>=2.0` | 页面表格（`st.dataframe`）与统计口径展示的数据容器 |
-
-> 未引入 Plotly：任务书要求「仅在必要时使用」，当前所有图表用 Streamlit 原生
-> `st.bar_chart` / `st.progress` 即可表达，且在证据不足时**不绘制**排名图。
-
-## UI 层约束（由测试强制）
-
-- UI 不实现决策算法，全部调用 `engine/` 与 `services/`（`test_15_ui_does_not_bypass_strict_gate`、
-  `test_15b_ui_source_has_no_scoring_logic`）。
-- 所有写操作经 `services/evidence_service.py` 与 `services/profile_service.py`。
-- 未知值显示「暂无数据 / 待核验 / 证据不足 / 暂无评分」，绝不补 0。
-- 历史候选 ≠ 2028 正式资格，页面显式提示。
-
-## 测试
-
-| 目录 | 内容 |
-|---|---|
-| `tests/ui/` | 用 `streamlit.testing.v1.AppTest` **真实渲染** 5 个页面并模拟交互（登记来源、筛选、切换页） |
-| `tests/integration/test_evidence_service.py` | 来源登记、重复拒绝、占位符不可核验、核验须留依据、闸门端到端、缺口统计口径 |
-| `tests/integration/test_profile_service.py` | 权重调整走服务层、持久化、恢复默认保留历史、派生不污染演示配置 |
-
-全部测试（Phase 4.0 + 4.1）：`pytest` → **149 passed**（详见 `reports/test_report_4_1.md`）。
+- 默认读取 `data/decision.db`；可用环境变量 `DECISION_DB_PATH` 指向其它库（测试即用此隔离）：
+  ```bash
+  DECISION_DB_PATH=/tmp/my.db streamlit run app.py
+  ```
+- 数据库缺失时，`ui/db_access.py` 会自动建表（空库），页面不会崩溃；"择校结果总览"页不受影响。
 
 ---
 
-# Phase 5.0｜北京邮电大学试点数据迁移
-
-仅针对北邮一所学校做了真实招生研究数据迁移（不改动评分、权重、公式与其他学校数据）：
-
-| 项 | 数量 | 说明 |
-|---|---|---|
-| 新增来源 | 3 | 2027 专业目录、2027 初试科目调整公告、人工智能学院官网（官网反爬 412，记为待核验） |
-| 新增声明 | 8 | 2027 官方事实；**适用年份为 2027，不会泄漏进 2028 判定** |
-| 已核验声明 | 6 | 经 `verify_claim(actor, basis)` 唯一合法路径升级 |
-| 待核验声明 | 2 | 需 2026 目录才能判断「方向01 业务课是否变更」 |
-
-关键口径纪律：**目录计划数（含推免）／统考计划／实际录取三者不得混用**；
-调整公告是**专业级**（085410 业务课 809→408），目录是**方向级**（方向01=801、仅方向02=408），
-因此**不能推断「所有方向都改为 408」**。
-
-> 2028 招生目录尚未发布（截至 2026-10-16），**2028 任何结论目前都无法确认**。
-> 2027 已核验事实在 `StrictEvidenceGate` 下于 `evaluation_year=2028` 会被**年份不匹配规则拒绝**。
-
----
-
-# 数据库初始化
-
-数据库**不入库**（见 `.gitignore`），由研究原件重建，三步：
-
-```bash
-# 1) 建表并导入 Phase 3.7C 研究原件（幂等，可重复执行）
-python scripts/import_excel.py \
-    --excel data/raw/Phase3_7C_情景覆盖率门槛修复版.xlsx \
-    --db data/decision.db --replay-check
-
-# 2) （可选）导入北邮 Phase 5.0 真实来源与声明，同样幂等
-python scripts/migrate_bupt_phase5_0.py
-
-# 3) 生成数据库结构说明
-python scripts/describe_schema.py --out reports/db_schema.md
-```
-
-指向其它库用 `--db`（导入脚本）或环境变量 `DECISION_DB_PATH`（Web / 测试）：
-
-```bash
-DECISION_DB_PATH=/tmp/my.db streamlit run app.py
-```
-
-若缺少研究原件 `data/raw/Phase3_7C_情景覆盖率门槛修复版.xlsx`，第 1 步无法执行，
-数据库需自行提供；此时 `tests/golden/` 黄金比对测试也会因缺少输入而不可用。
-
----
-
-# 证据治理规则（硬性，由代码与测试强制）
-
-| 规则 | 内容 |
-|---|---|
-| 来源登记 | `register_source_strict` 拒绝重复 `source_id`、拒绝占位来源、必须提供 URL/文件 or 发布方 |
-| 声明升级 | **唯一合法路径**是 `verify_claim(actor, basis)`；候选映射永不自动升级为已核验 |
-| 年份匹配 | 证据年份必须**精确等于**评估年份（`year_window=0`），历史事实不泄漏到 2028 |
-| 缺失处理 | 不补零；未知保持未知，不计入分子分母 |
-| 冲突处理 | `detect_and_record_conflict` 只记录，**不覆盖**旧事实 |
-| 写操作 | 全部经 `services/evidence_service.py` / `services/profile_service.py`，页面不直接改 ORM 字段 |
-| 审计 | 每次写入落 `audit_log`（actor / action / detail） |
-
----
-
-# 项目当前状态与后续方向
+## 已知限制（v1.0.0）
 
 | 项 | 状态 |
 |---|---|
-| 功能开发 | **已暂停**，等待独立审查结论 |
-| 数据覆盖 | 5 所学校 / 10 条路径；导师、科研资源、招生记录**三类数据均为 0 条** |
-| 有效评分 | 0（180 条全部「未知」） |
-| 可比较路径 | 0（10 条全部硬约束待确认） |
-| 用户反馈 | 「更像一个数据管理后台，而不是择校助手」 |
-| 后续方向 | **尚未确定**，不做承诺 |
+| 2028 招生资格 | 五校 2028 目录均未发布，全部路径"2028 资格未确认" |
+| 有效评分 | 0（评分记录有效性全部为"未知"，属正确行为） |
+| 导师 / 科研资源 / 招生记录 | 三类数据均为 0 条（Excel 研究证据尚未结构化入库，见 `docs/DATA_UTILIZATION_AUDIT.md`） |
+| 权重配置 | 演示配置（`is_demo=True`），尚未确认为用户真实偏好 |
+| 结论性质 | 候选判断，不构成录取预测或院校排名；2028 目录发布后需复核 |
 
-已知问题与审查重点见 `docs/CHAIN_CODE_REVIEW_HANDOFF.md` 与 `docs/known_limitations.md`。
-
+详细数据利用审计见 **`docs/DATA_UTILIZATION_AUDIT.md`**；择校结论见 **`docs/2028_AI_MASTER_DECISION_REPORT.md`**。
