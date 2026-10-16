@@ -67,10 +67,27 @@ def app_test_empty(empty_db_path, monkeypatch):
     return _make
 
 
+# Phase 6.0 导航重组后，原 5 个页面全部保留在「高级功能」下。
+# 既有用例的页面名不变，由本助手负责映射到新导航位置；
+# **所有断言保持原样，未做删改**。
+LEGACY_PAGE_MAP: dict[str, tuple[str, str]] = {
+    "① 项目总览": ("⚙️ 高级功能", "系统状态"),
+    "② 招生路径": ("⚙️ 高级功能", "数据维护 · 招生路径"),
+    "③ 证据管理": ("⚙️ 高级功能", "证据管理"),
+    "④ 决策模型": ("⚙️ 高级功能", "模型参数"),
+    "⑤ 决策分析": ("⚙️ 高级功能", "决策分析"),
+}
+
+
 def goto(at, page: str):
-    """切换侧边栏导航并重新运行。"""
+    """切换侧边栏导航并重新运行（兼容 Phase 6.0 导航重组前的页面名）。"""
     at.run()
-    at.radio[0].set_value(page).run()
+    if page in LEGACY_PAGE_MAP:
+        main, sub = LEGACY_PAGE_MAP[page]
+        at.radio[0].set_value(main).run()
+        at.radio[1].set_value(sub).run()
+    else:
+        at.radio[0].set_value(page).run()
     return at
 
 
