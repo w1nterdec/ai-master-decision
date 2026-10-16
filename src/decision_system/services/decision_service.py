@@ -43,7 +43,13 @@ from decision_system.models.entities import (
     WeightNode,
     WeightProfile,
 )
-from decision_system.models.enums import ClaimStatus, VerificationStatus
+from decision_system.models.enums import (
+    AdmissionMethod,
+    ClaimStatus,
+    SourceType,
+    StudyMode,
+    VerificationStatus,
+)
 
 
 def _now() -> _dt.datetime:
@@ -219,6 +225,17 @@ QUALIFICATION_INDICATOR_CODES: frozenset[str] = frozenset(
     }
 )
 
+# 资格判定只接受"官方招生来源"：官方招生目录 / 官方公告 / 官方网页 / PDF 原件。
+# 研究报告、媒体报道、访谈等不得单独作为某年"确实招生"的依据。
+OFFICIAL_SOURCE_TYPES: frozenset[SourceType] = frozenset(
+    {
+        SourceType.OFFICIAL_CATALOG,
+        SourceType.OFFICIAL_NOTICE,
+        SourceType.OFFICIAL_WEB,
+        SourceType.PDF_ORIGINAL,
+    }
+)
+
 
 def _name_segments(code: str) -> list[str]:
     """`L3-报考可行性|招生路径|名额口径可靠性` -> ['报考可行性', '招生路径', '名额口径可靠性']。"""
@@ -302,12 +319,18 @@ def _claim_scope_matches(
 
 def _claim_is_path_specific(
     session: Session, claim: EvidenceClaim, path: AdmissionPath
-) -> tuple[bool, str | None]:
-    """方向 / 学习方式粒度：**学院招生不能证明所有方向招生**。
+) -> tuple[bool, str | None, bool]:
+    """方向 / 学习方式粒度检查（Phase 7.0 修正）。
 
-    判定：在与本路径同 (学校, 学院, 专业) 的兄弟路径中，本声明若关联到
-    1 条以上，则它只是**专业级 / 学院级**证据，不能证明某个具体方向或
-    学习方式在某年招生。
+    返回 ``(ok, reason, professional)``：
+    - ``ok``：该声明是否可用于本路径资格判定；仅当声明完全未关联本路径（或
+      只关联了其它方向）时为 ``False``。
+    - ``professional``：声明同时覆盖同一专业的多条兄弟路径，属于**专业级/学院级**
+      证据（如官方目录同时列出多个方向）。按 Phase 7.0 要求，这类证据**可以分别
+      验证**每条被覆盖的路径，不再"仅因关联多方向就拒绝"；``professional`` 仅用于
+      展示提示（"专业级证据，覆盖多方向"），不阻止判定。
+    - 方向范围存在未解决冲突时，由 `_evaluate_claim_for_qualification` 的冲突检查
+      兜底拒绝。
     """
     siblings = set(
         session.execute(
@@ -332,13 +355,15 @@ def _claim_is_path_specific(
     )
     hit = siblings & linked
     if not hit:
-        return False, "未关联到本路径"
+        return False, "声明未关联到本路径（或只关联了其它方向）", False
+    # 命中本路径：允许判定。多方向覆盖视为专业级证据，仍可分别验证。
     if len(hit) > 1:
-        return False, (
-            "该声明同时关联同一专业下的多条路径，属专业级/学院级证据，"
-            "不能证明具体方向或学习方式招生"
+        return (
+            True,
+            "专业级/学院级证据，覆盖多个方向（可分别验证每条被覆盖的路径）",
+            True,
         )
-    return True, None
+    return True, None, False
 
 
 def _evaluate_claim_for_qualification(
@@ -384,7 +409,17 @@ def _evaluate_claim_for_qualification(
     if not ok:
         return False, why or "证据适用范围与路径不一致"
 
-    ok, why = _claim_is_path_specific(session, claim, path)
+    # 官方来源约束：资格判定只允许官方招生来源，杜绝研究报告/媒体/访谈单独证明招生。
+    if src.source_type not in OFFICIAL_SOURCE_TYPES:
+        return False, f"来源类型「{src.source_type}」非官方招生来源，不能单独证明资格"
+
+    # 学习方式 / 招生方式约束：用户仅考虑全日制统考路径；未知则无法确认。
+    if path.study_mode not in (StudyMode.FULL_TIME,):
+        return False, f"路径学习方式「{path.study_mode}」非全日制，用户仅考虑全日制"
+    if path.admission_method == AdmissionMethod.UNKNOWN:
+        return False, "路径招生方式未知，无法确认资格"
+
+    ok, why, _professional = _claim_is_path_specific(session, claim, path)
     if not ok:
         return False, why or "证据粒度不足以定位到本路径"
 

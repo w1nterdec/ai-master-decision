@@ -28,6 +28,8 @@ from decision_system.models.entities import (
     School,
 )
 from decision_system.models.enums import ClaimStatus, VerificationStatus
+from decision_system.services.decision_policy import build_decision_explanation
+from decision_system.services.decision_service import explain_2028_qualification
 from decision_system.ui.decision_view import PathRow
 from decision_system.ui.viewmodels import (
     CONFLICT,
@@ -56,6 +58,7 @@ from decision_system.ui.viewmodels import (
     RiskSummary,
     SchoolSummary,
     VERIFIED_TEXTS,
+    _is_explicit_inference,
     grade_claim,
     COMPARE_DIMENSIONS,
 )
@@ -373,6 +376,7 @@ def _fact_from_claim(item: ClaimItem) -> FactItem:
         source_status=item.source_status,
         is_2028=item.is_2028,
         limitation=limitation,
+        is_inference=_is_explicit_inference(item.statement),
     )
 
 
@@ -398,7 +402,8 @@ def build_research_dossier(
     for p in paths:
         for item in p.evidence.items:
             fact = _fact_from_claim(item)
-            key = f"{fact.grade}|{fact.statement}"
+            # 去重键包含来源标题：不同来源的相同正文不得丢失来源信息（P2 要求 3）。
+            key = f"{fact.grade}|{fact.statement}|{fact.source_title}"
             if key in seen:
                 continue
             seen.add(key)
@@ -541,6 +546,50 @@ def build_risk_summary(session: Session, p: PathSummary) -> RiskSummary:
         employment=employment,
         gaps=tuple(build_risk_gaps(session, [p])),
         risk_level=UNKNOWN if p.qualification_2028 != QUAL_CONFIRMED else PENDING,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase 7.0｜四层决策解释（只读桥接，不改动引擎）
+# ---------------------------------------------------------------------------
+def build_path_decision_explanation(
+    session: Session,
+    path,
+    p: PathSummary,
+    *,
+    archive=None,
+) -> "object":
+    """把一条路径的展示视图 + 资格判定装配成四层决策解释。
+
+    纯只读：不写数据库、不改引擎；解释依据全部来自已核验证据与资格闸门。
+    """
+    qual_ok, qual_reasons = explain_2028_qualification(session, path, year=2028)
+    verified_facts = [it.statement for it in p.evidence.items if it.status in VERIFIED_TEXTS]
+    if p.quotas:
+        quota_state = "；".join(
+            f"{q.year} {q.basis} 计划{q.planned if q.planned is not None else '暂无'}"
+            for q in p.quotas
+        )
+    else:
+        quota_state = "暂无分口径记录（目录计划/统考计划/实际录取均无）"
+    is_demo = bool(getattr(archive, "is_demo_profile", True))
+    confirmed = bool(getattr(archive, "active_profile_code", None)) and not is_demo
+    gaps = tuple(g.topic for g in build_risk_gaps(session, [p]))
+    return build_decision_explanation(
+        path_key=p.path_key,
+        title=p.title,
+        subtitle=p.subtitle,
+        verified_facts=verified_facts,
+        evidence_state=p.evidence.state,
+        qualification_text=p.qualification_2028,
+        qualification_reasons=qual_reasons,
+        exam_unit4=p.exam_unit4,
+        key_risk=p.key_risk,
+        quota_state=quota_state,
+        has_verified_2028=p.evidence.verified_2028_claims > 0,
+        is_demo_profile=is_demo,
+        confirmed_profile=confirmed,
+        gaps=gaps,
     )
 
 

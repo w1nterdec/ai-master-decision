@@ -13,11 +13,13 @@ from typing import Sequence
 
 import streamlit as st
 
+from decision_system.models.entities import AdmissionPath
 from decision_system.services import view_service
 from decision_system.ui.blocks import (
     path_label,
     path_short,
     render_demo_weight_notice,
+    render_decision_explanation,
     render_disclaimer,
     render_path_header,
     render_quotas,
@@ -98,6 +100,14 @@ def render(session, rows, *, threshold: float = 0.8, profile_code: str = "phase3
             "等级显示为「暂无数据」的原因是：2028 正式资格未确认，"
             "风险无法被可靠量化——这是**证据不足**，不是「风险低」。"
         )
+
+    # Phase 7.0｜四层决策解释（L1-L4，含「不二战」全局政策与失败后备路径）
+    orm_path = session.get(AdmissionPath, p.path_id)
+    if orm_path is not None:
+        expl = view_service.build_path_decision_explanation(
+            session, orm_path, p, archive=None
+        )
+        render_decision_explanation(expl, expanded=False)
 
     _render_hard(rs)
 

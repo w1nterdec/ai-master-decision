@@ -248,14 +248,28 @@ def test_scope_mismatch_reason_mentions_field(empty_db: Session, scope):
 # ---------------------------------------------------------------------------
 # 方向 / 学习方式粒度
 # ---------------------------------------------------------------------------
-def test_program_level_claim_cannot_prove_direction(empty_db: Session, scope):
-    """学院/专业级声明不能证明某个具体方向招生。"""
+def test_multidirection_official_claim_confirms_each_direction(empty_db: Session, scope):
+    """Phase 7.0｜官方证据明确覆盖多个方向（如招生目录同时列出方向01/02），
+    可以分别验证每条被覆盖的路径，不得仅因关联多方向就拒绝。"""
     claim = _make_claim(empty_db, claim_years=[YEAR], src_years=[YEAR])
     _link(empty_db, claim, scope["a"])
     _link(empty_db, claim, scope["b"])
+    # 同一官方声明覆盖两个方向时，每个方向都可被分别验证。
+    assert _has_verified_2028_evidence(empty_db, scope["a"]) is True
+    assert _has_verified_2028_evidence(empty_db, scope["b"]) is True
+    ok, why, professional = _claim_is_path_specific(empty_db, claim, scope["a"])
+    assert ok is True
+    assert professional is True
+    assert "专业级" in why
+
+
+def test_claim_linked_only_to_one_direction_isolates_other(empty_db: Session, scope):
+    """「可分别验证」不等于「跨方向泄漏」：只关联到方向02 的声明，
+    不得让方向01 被认定资格（兄弟方向之间依然隔离）。"""
+    claim = _make_claim(empty_db, claim_years=[YEAR], src_years=[YEAR])
+    _link(empty_db, claim, scope["b"])
     assert _has_verified_2028_evidence(empty_db, scope["a"]) is False
-    ok, why = _claim_is_path_specific(empty_db, claim, scope["a"])
-    assert ok is False and "专业级" in why
+    assert _has_verified_2028_evidence(empty_db, scope["b"]) is True
 
 
 def test_claim_linked_only_to_other_study_mode_rejected(empty_db: Session, scope):

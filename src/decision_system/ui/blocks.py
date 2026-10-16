@@ -15,6 +15,7 @@ import pandas as pd
 import streamlit as st
 
 from decision_system.services.view_service import load_archive, save_archive
+from decision_system.services.decision_policy import DecisionExplanation
 from decision_system.ui.formatting import (
     MISSING_TEXT,
     quota_text,
@@ -353,3 +354,45 @@ def render_research_dossier(
         "第二层继续沿用严格证据闸门：年份不匹配即拒、候选声明不算、"
         "历史事实不得冒充 2028。"
     )
+
+
+# ---------------------------------------------------------------------------
+# Phase 7.0｜四层决策解释渲染（修复审计 A-02 / A-03 / A-04）
+# ---------------------------------------------------------------------------
+_LAYER_ICON = {
+    "L1 是否值得读": "①",
+    "L2 是否值得考": "②",
+    "L3 失败后备路径": "③",
+    "L4 动态偏好比较": "④",
+}
+
+
+def render_decision_explanation(expl: DecisionExplanation, *, expanded: bool = True) -> None:
+    """把四层决策解释渲染为可核查的分层卡片。
+
+    每一层都给出结论 + 依据；「不二战」作为全局政策贯穿 L3；
+    演示权重在 L4 显式标注（A-01 / A-10）。
+    """
+    st.markdown("#### 四层决策解释")
+    st.caption("结论均可核查：每一层列出判断依据，不编造综合评分或录取概率。")
+
+    layers = [
+        expl.layer1_worth_reading,
+        expl.layer2_worth_testing,
+        expl.layer3_fallback,
+        expl.layer4_preference,
+    ]
+    for ly in layers:
+        icon = _LAYER_ICON.get(ly.layer, "•")
+        blocked = " ⛔" if ly.blocked else ""
+        st.markdown(f"**{icon} {ly.layer} → {ly.verdict}{blocked}**")
+        for r in ly.reasons:
+            st.markdown(f"&nbsp;&nbsp;- {r}")
+
+    with st.expander("查看全局决策政策（用户已确认，非系统推断）", expanded=False):
+        for g in expl.global_policy:
+            st.markdown(f"- {g}")
+    if expl.gaps:
+        st.markdown("**最该补充的证据（按影响排序）**")
+        for g in expl.gaps[:5]:
+            st.markdown(f"- {g}")

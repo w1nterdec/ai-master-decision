@@ -14,12 +14,13 @@ from typing import Sequence
 import streamlit as st
 from sqlalchemy import select
 
-from decision_system.models.entities import WeightProfile
+from decision_system.models.entities import AdmissionPath, WeightProfile
 from decision_system.services import view_service
 from decision_system.ui.blocks import (
     get_archive,
     path_label,
     render_demo_weight_notice,
+    render_decision_explanation,
     render_disclaimer,
     render_research_dossier,
 )
@@ -125,6 +126,12 @@ def _render_focus(session, focus, *, threshold: float) -> None:
             )
             for p in paths:
                 st.markdown(f"- 我标记的路径：{path_label(p)}（{p.direction or '未分方向'}）")
+                orm_path = session.get(AdmissionPath, p.path_id)
+                if orm_path is not None:
+                    expl = view_service.build_path_decision_explanation(
+                        session, orm_path, p, archive=archive
+                    )
+                    render_decision_explanation(expl, expanded=False)
 
 
 def render(session, rows, *, profile_code: str, threshold: float = 0.8) -> None:

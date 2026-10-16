@@ -232,8 +232,15 @@ GRADE_B = "B 待核验研究资料"
 GRADE_C = "C 推断或主观评价"
 GRADE_D = "D 未知"
 
-# 声明原文中出现这些前缀时，判为「推断」而非事实
-_INFERENCE_MARKERS = ("【推断", "推断·", "（推断）", "推测")
+# 声明原文以这些「显式结构化前缀」开头时，才判为「推断/主观评价」而非事实。
+# 注意：Phase 7.0 明确禁止「仅凭正文出现『推断』二字」决定类别——
+# 故此处只认**开头**的结构化标记，正文中间出现"推断"不触发 C 类。
+_INFERENCE_PREFIXES = ("【推断】", "【推测】", "（推断）", "推断·")
+
+
+def _is_explicit_inference(text: str | None) -> bool:
+    t = (text or "").strip()
+    return any(t.startswith(p) for p in _INFERENCE_PREFIXES)
 
 
 @dataclass(frozen=True)
@@ -247,15 +254,32 @@ class FactItem:
     source_status: str
     is_2028: bool
     limitation: str | None = None
+    is_inference: bool = False
 
 
-def grade_claim(item: "ClaimItem") -> str:
-    """按证据状态把声明归入 A/B/C/D 之一（只做分类，不改数据）。"""
-    text = item.statement or ""
-    if any(m in text for m in _INFERENCE_MARKERS):
-        return GRADE_C
+def grade_claim(
+    item: "ClaimItem",
+    *,
+    scope_ok: bool = True,
+    has_conflict: bool = False,
+) -> str:
+    """按证据状态把声明归入 A/B/C/D 之一（只做分类，不改数据）。
+
+    Phase 7.0 规则：
+    - A 已核实事实：声明已核验 + 来源已核验 + 非候选 + 适用范围正确 + 无未解决冲突；
+      任一不满足则降级为 B。
+    - C 推断/主观评价：**仅当**声明以显式结构化前缀开头（如「【推断】」）才归 C；
+      严禁仅凭正文出现"推断"二字判定。无显式标记的非 A 声明一律保守归 B。
+    - D 未知由调用方（无材料时）单独处理，本函数不返回 D。
+    """
+    if item.is_candidate:
+        return GRADE_B
     if item.status in VERIFIED_TEXTS and item.source_status in VERIFIED_TEXTS:
+        if not scope_ok or has_conflict:
+            return GRADE_B
         return GRADE_A
+    if _is_explicit_inference(item.statement):
+        return GRADE_C
     return GRADE_B
 
 
