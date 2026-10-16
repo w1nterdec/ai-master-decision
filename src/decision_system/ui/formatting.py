@@ -39,6 +39,16 @@ _STATUS_KIND = {
     "未满足": "error",
     "否": "error",
     "无效": "error",
+    # --- Phase 6.0 展示层统一状态 ---
+    "已确认": "ok",
+    "已评估": "ok",
+    "未确认": "warn",
+    "部分评估": "warn",
+    "待评估": "warn",
+    "暂无数据": "warn",
+    "不适用": "warn",
+    "无法判断": "warn",
+    "存在冲突": "error",
 }
 
 _KIND_COLOR = {"ok": "green", "warn": "orange", "error": "red", "": "gray"}

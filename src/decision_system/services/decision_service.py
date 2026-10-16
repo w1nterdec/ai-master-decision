@@ -29,6 +29,9 @@ from decision_system.models.entities import (
     AdmissionPath,
     ClaimIndicatorLink,
     ClaimPathLink,
+    College,
+    Program,
+    School,
     DecisionResult,
     EvidenceClaim,
     EvidenceSource,
@@ -40,7 +43,13 @@ from decision_system.models.entities import (
     WeightNode,
     WeightProfile,
 )
-from decision_system.models.enums import ClaimStatus, VerificationStatus
+from decision_system.models.enums import (
+    AdmissionMethod,
+    ClaimStatus,
+    SourceType,
+    StudyMode,
+    VerificationStatus,
+)
 
 
 def _now() -> _dt.datetime:
@@ -195,25 +204,264 @@ def path_context_from_db(session: Session, path: AdmissionPath) -> PathContext:
     )
 
 
-def _has_verified_2028_evidence(session: Session, path: AdmissionPath) -> bool:
-    rows = (
+# ---------------------------------------------------------------------------
+# 招生资格判定（Phase 6.1 M2 重写）
+#
+# 判定原则：**宁可判「未确认」，不可误判「已确认」**。
+# 认定一条路径在某年"确实招生"，必须同时满足七项条件（见 _evaluate_claim_for_qualification），
+# 其中"资格语义"只认指标树上明确表示「该全日制统考路径存在」的指标，
+# **不使用任何文本关键词**（"招生目录""招生名额""全日制""统考"等一律不作数）。
+# ---------------------------------------------------------------------------
+
+QUALIFICATION_L1_NAME = "报考可行性"
+QUALIFICATION_L2_NAME = "招生路径"
+
+# 语义锚点：只有这两个指标的语义是"该全日制统考招生路径在某年确实存在"。
+# 「名额口径可靠性」只说明人数口径；「考试风险」只说明科目；一级「报考可行性」过粗。
+QUALIFICATION_INDICATOR_CODES: frozenset[str] = frozenset(
+    {
+        "L3-报考可行性|招生路径|全日制统考路径明确性",
+        "L2-报考可行性|招生路径",
+    }
+)
+
+# 资格判定只接受"官方招生来源"：官方招生目录 / 官方公告 / 官方网页 / PDF 原件。
+# 研究报告、媒体报道、访谈等不得单独作为某年"确实招生"的依据。
+OFFICIAL_SOURCE_TYPES: frozenset[SourceType] = frozenset(
+    {
+        SourceType.OFFICIAL_CATALOG,
+        SourceType.OFFICIAL_NOTICE,
+        SourceType.OFFICIAL_WEB,
+        SourceType.PDF_ORIGINAL,
+    }
+)
+
+
+def _name_segments(code: str) -> list[str]:
+    """`L3-报考可行性|招生路径|名额口径可靠性` -> ['报考可行性', '招生路径', '名额口径可靠性']。"""
+    return [seg.split("-", 1)[-1] for seg in code.split("|")]
+
+
+def _is_qualification_indicator(code: str) -> bool:
+    """只有语义锚点指标可以证明路径存在。
+
+    同属「招生路径」子组的「名额口径可靠性」只说明人数口径是否可靠，
+    **不能**证明该路径在某年招生；一级「报考可行性」含「考试风险」，语义过粗。
+    """
+    return code in QUALIFICATION_INDICATOR_CODES
+
+
+def _claim_supports_qualification(session: Session, claim: EvidenceClaim) -> bool:
+    """声明是否**在语义上**支撑「该招生路径存在」。
+
+    只依据指标关联（`supports=True` 且指标属于「报考可行性 · 招生路径」），
+    **不**看 topic / stage / 正文关键词。
+    """
+    return _qualification_indicator_hit(session, claim)[0]
+
+
+def _qualification_indicator_hit(
+    session: Session, claim: EvidenceClaim
+) -> tuple[bool, str | None]:
+    links = (
+        session.execute(
+            select(ClaimIndicatorLink).where(ClaimIndicatorLink.claim_id == claim.id)
+        )
+        .scalars()
+        .all()
+    )
+    if not links:
+        return False, "未关联任何指标，无法判断其语义"
+    seen: list[str] = []
+    for l in links:
+        ind = session.get(Indicator, l.indicator_id)
+        if ind is None:
+            continue
+        if not l.supports:
+            seen.append(f"{ind.code}(不支持)")
+            continue
+        if _is_qualification_indicator(ind.code):
+            return True, None
+        seen.append(ind.code)
+    return False, "仅关联 " + "、".join(seen) + "，不能证明该路径存在"
+
+
+def _path_codes(session: Session, path: AdmissionPath) -> tuple[str | None, ...]:
+    school = session.get(School, path.school_id)
+    college = session.get(College, path.college_id)
+    program = session.get(Program, path.program_id)
+    return (
+        school.code if school else None,
+        college.college_code if college else None,
+        program.program_code if program else None,
+    )
+
+
+def _claim_scope_matches(
+    session: Session, claim: EvidenceClaim, path: AdmissionPath
+) -> tuple[bool, str | None]:
+    """证据适用范围（学校 / 学院 / 专业代码）必须与路径一致。
+
+    声明**已标注**的层级必须精确相等；未标注的层级不做正向证明，
+    由「方向/学习方式粒度」检查（_claim_is_path_specific）兜底。
+    """
+    school_code, college_code, program_code = _path_codes(session, path)
+    checks = (
+        ("学校", claim.school_code, school_code),
+        ("学院", claim.college_code, college_code),
+        ("专业代码", claim.program_code, program_code),
+    )
+    for label, declared, actual in checks:
+        if declared and actual and str(declared) != str(actual):
+            return False, f"证据适用{label}「{declared}」与路径「{actual}」不一致"
+    return True, None
+
+
+def _claim_is_path_specific(
+    session: Session, claim: EvidenceClaim, path: AdmissionPath
+) -> tuple[bool, str | None, bool]:
+    """方向 / 学习方式粒度检查（Phase 7.0 修正）。
+
+    返回 ``(ok, reason, professional)``：
+    - ``ok``：该声明是否可用于本路径资格判定；仅当声明完全未关联本路径（或
+      只关联了其它方向）时为 ``False``。
+    - ``professional``：声明同时覆盖同一专业的多条兄弟路径，属于**专业级/学院级**
+      证据（如官方目录同时列出多个方向）。按 Phase 7.0 要求，这类证据**可以分别
+      验证**每条被覆盖的路径，不再"仅因关联多方向就拒绝"；``professional`` 仅用于
+      展示提示（"专业级证据，覆盖多方向"），不阻止判定。
+    - 方向范围存在未解决冲突时，由 `_evaluate_claim_for_qualification` 的冲突检查
+      兜底拒绝。
+    """
+    siblings = set(
+        session.execute(
+            select(AdmissionPath.id).where(
+                AdmissionPath.school_id == path.school_id,
+                AdmissionPath.college_id == path.college_id,
+                AdmissionPath.program_id == path.program_id,
+            )
+        )
+        .scalars()
+        .all()
+    )
+    linked = set(
+        session.execute(
+            select(ClaimPathLink.path_id).where(
+                ClaimPathLink.claim_id == claim.id,
+                ClaimPathLink.applicable.is_(True),
+            )
+        )
+        .scalars()
+        .all()
+    )
+    hit = siblings & linked
+    if not hit:
+        return False, "声明未关联到本路径（或只关联了其它方向）", False
+    # 命中本路径：允许判定。多方向覆盖视为专业级证据，仍可分别验证。
+    if len(hit) > 1:
+        return (
+            True,
+            "专业级/学院级证据，覆盖多个方向（可分别验证每条被覆盖的路径）",
+            True,
+        )
+    return True, None, False
+
+
+def _evaluate_claim_for_qualification(
+    session: Session, path: AdmissionPath, claim: EvidenceClaim, link: ClaimPathLink, year: int
+) -> tuple[bool, str]:
+    """逐条判定一条声明能否作为「`year` 年该路径确实招生」的证据。
+
+    七项条件缺一不可：
+        1. 路径关联明确且有效；
+        2. 声明已核验、非候选；
+        3. 声明与来源适用年份均含 `year`；
+        4. 来源已核验；
+        5. 学校 / 学院 / 专业代码适用范围一致；
+        6. 方向 / 学习方式粒度足够（不能是专业级证据）；
+        7. 无影响资格判断的未解决冲突。
+    另：声明语义必须能证明路径存在（指标锚点），不使用文本关键词。
+    """
+    if not link.applicable:
+        return False, "路径关联被标记为不适用"
+
+    if claim.status is not ClaimStatus.VERIFIED:
+        return False, f"声明状态为「{claim.status}」，非已核验"
+    if claim.is_candidate:
+        return False, "声明为候选映射，永不自动升级为已核验"
+
+    if not claim.applicable_years or year not in claim.applicable_years:
+        years = list(claim.applicable_years or [])
+        return False, f"声明适用年份 {years or '未标注'} 不含 {year}"
+
+    src = session.get(EvidenceSource, claim.source_id_fk)
+    if src is None:
+        return False, "来源缺失"
+    if src.verification_status is not VerificationStatus.VERIFIED:
+        return False, f"来源核验状态为「{src.verification_status}」"
+    if src.applicable_years and year not in src.applicable_years:
+        return False, f"来源适用年份 {list(src.applicable_years)} 不含 {year}"
+
+    ok, why = _qualification_indicator_hit(session, claim)
+    if not ok:
+        return False, why or "声明语义不能证明该路径存在"
+
+    ok, why = _claim_scope_matches(session, claim, path)
+    if not ok:
+        return False, why or "证据适用范围与路径不一致"
+
+    # 官方来源约束：资格判定只允许官方招生来源，杜绝研究报告/媒体/访谈单独证明招生。
+    if src.source_type not in OFFICIAL_SOURCE_TYPES:
+        return False, f"来源类型「{src.source_type}」非官方招生来源，不能单独证明资格"
+
+    # 学习方式 / 招生方式约束：用户仅考虑全日制统考路径；未知则无法确认。
+    if path.study_mode not in (StudyMode.FULL_TIME,):
+        return False, f"路径学习方式「{path.study_mode}」非全日制，用户仅考虑全日制"
+    if path.admission_method == AdmissionMethod.UNKNOWN:
+        return False, "路径招生方式未知，无法确认资格"
+
+    ok, why, _professional = _claim_is_path_specific(session, claim, path)
+    if not ok:
+        return False, why or "证据粒度不足以定位到本路径"
+
+    if unresolved_conflict_source_ids(session) and claim.source_ref_id in (
+        unresolved_conflict_source_ids(session)
+    ):
+        return False, "来源存在未解决冲突，不得用于资格判定"
+
+    return True, f"来源 {src.source_id} 声明 #{claim.id} 通过全部资格条件"
+
+
+def explain_2028_qualification(
+    session: Session, path: AdmissionPath, *, year: int = 2028
+) -> tuple[bool, tuple[str, ...]]:
+    """返回 (是否已取得资格证据, 逐条未通过原因)。供页面展示「为什么未确认」。"""
+    links = (
         session.execute(
             select(ClaimPathLink).where(ClaimPathLink.path_id == path.id)
         )
         .scalars()
         .all()
     )
-    for link in rows:
+    if not links:
+        return False, ("该路径没有任何证据声明关联",)
+    reasons: list[str] = []
+    for link in links:
         claim = session.get(EvidenceClaim, link.claim_id)
-        if claim is None or claim.status is not ClaimStatus.VERIFIED:
+        if claim is None:
+            reasons.append(f"关联 #{link.claim_id} 指向不存在的声明")
             continue
-        if claim.is_candidate:
-            continue
-        if claim.applicable_years and 2028 in claim.applicable_years:
-            src = session.get(EvidenceSource, claim.source_id_fk)
-            if src is not None and src.verification_status is VerificationStatus.VERIFIED:
-                return True
-    return False
+        ok, why = _evaluate_claim_for_qualification(session, path, claim, link, year)
+        if ok:
+            return True, (f"{year} 年资格证据成立：{why}",)
+        reasons.append(f"声明 #{claim.id}（{claim.topic or '无主题'}）：{why}")
+    return False, tuple(reasons)
+
+
+def _has_verified_2028_evidence(
+    session: Session, path: AdmissionPath, *, year: int = 2028
+) -> bool:
+    """是否存在**可支撑 `year` 年招生资格**的已核验证据（严格判定）。"""
+    return explain_2028_qualification(session, path, year=year)[0]
 
 
 def evaluate_and_persist(

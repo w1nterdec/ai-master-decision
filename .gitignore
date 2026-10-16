@@ -10,6 +10,9 @@ data/web_public_snapshot.db
 # 备份（本地历史，不入库）
 data/backup/
 
+# 我的决策档案（Phase 6.0：用户本地个人标记与备注，不入库）
+data/decision_profile.json
+
 # 处理中间产物
 data/processed/*
 !data/processed/.gitkeep

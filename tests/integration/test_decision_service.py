@@ -14,6 +14,7 @@ from decision_system.models.enums import (
     ComparisonStatus,
     ObjectiveStatus,
     Qualification2028,
+    SourceType,
     VerificationStatus,
 )
 from decision_system.services.decision_service import (
@@ -67,6 +68,7 @@ def _prepare_verified_evidence(db, legacy_path_id: str = "P01") -> AdmissionPath
         title="2028 年硕士招生专业目录（测试样例）",
         publisher="测试机构",
         url_or_file="file:///sample/2028-catalog.pdf",
+        source_type=SourceType.OFFICIAL_CATALOG,
         applicable_years=[2028],
         verification_status=VerificationStatus.VERIFIED,
     )
