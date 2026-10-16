@@ -1,0 +1,207 @@
+{
+  "apply": true,
+  "db": "/workspace/ai-master-decision/data/decision.db",
+  "backup": "迁移前基线备份已存在，未覆盖：/workspace/ai-master-decision/data/backup/decision.db.bak_phase5_0",
+  "before": {
+    "admission_path": 10,
+    "admission_record": 0,
+    "admission_year": 1,
+    "audit_log": 100,
+    "claim_conflict": 0,
+    "claim_indicator_link": 193,
+    "claim_path_link": 71,
+    "college": 9,
+    "decision_result": 0,
+    "evidence_claim": 56,
+    "evidence_source": 87,
+    "hard_constraint_evaluation": 0,
+    "import_batch": 1,
+    "indicator": 33,
+    "mentor": 0,
+    "program": 9,
+    "research_resource": 0,
+    "resource_path_link": 0,
+    "scenario": 3,
+    "scenario_multiplier": 15,
+    "school": 5,
+    "score_record": 180,
+    "weight_node": 33,
+    "weight_profile": 1
+  },
+  "after": {
+    "admission_path": 10,
+    "admission_record": 0,
+    "admission_year": 1,
+    "audit_log": 100,
+    "claim_conflict": 0,
+    "claim_indicator_link": 193,
+    "claim_path_link": 71,
+    "college": 9,
+    "decision_result": 0,
+    "evidence_claim": 56,
+    "evidence_source": 87,
+    "hard_constraint_evaluation": 0,
+    "import_batch": 1,
+    "indicator": 33,
+    "mentor": 0,
+    "program": 9,
+    "research_resource": 0,
+    "resource_path_link": 0,
+    "scenario": 3,
+    "scenario_multiplier": 15,
+    "school": 5,
+    "score_record": 180,
+    "weight_node": 33,
+    "weight_profile": 1
+  },
+  "sources": [
+    {
+      "source_id": "S-BUPT-2027-CATALOG-005",
+      "action": "已存在-跳过",
+      "status": "已核验",
+      "verified_flag": true
+    },
+    {
+      "source_id": "S-BUPT-2027-EXAMADJ",
+      "action": "已存在-跳过",
+      "status": "已核验",
+      "verified_flag": true
+    },
+    {
+      "source_id": "S-BUPT-AI-COLLEGE-SITE",
+      "action": "已存在-跳过",
+      "status": "待核验",
+      "verified_flag": false
+    }
+  ],
+  "claims": [
+    {
+      "key": "C1-college-total",
+      "claim_id": 49,
+      "action": "已存在-跳过",
+      "status": "已核验",
+      "is_candidate": false,
+      "applicable_years": [
+        2027
+      ],
+      "linked": [
+        "路径 BUPT|005|085410|全日制|方向01|2028|统考|一志愿",
+        "路径 BUPT|005|085410|全日制|方向02|2028|统考|一志愿",
+        "指标 L3-报考可行性|招生路径|名额口径可靠性",
+        "指标 L3-报考可行性|招生路径|全日制统考路径明确性"
+      ]
+    },
+    {
+      "key": "C2-dir01",
+      "claim_id": 50,
+      "action": "已存在-跳过",
+      "status": "已核验",
+      "is_candidate": false,
+      "applicable_years": [
+        2027
+      ],
+      "linked": [
+        "路径 BUPT|005|085410|全日制|方向01|2028|统考|一志愿",
+        "指标 L3-报考可行性|考试风险|初复试科目稳定性",
+        "指标 L3-报考可行性|招生路径|名额口径可靠性",
+        "指标 L3-报考可行性|招生路径|全日制统考路径明确性"
+      ]
+    },
+    {
+      "key": "C3-dir02",
+      "claim_id": 51,
+      "action": "已存在-跳过",
+      "status": "已核验",
+      "is_candidate": false,
+      "applicable_years": [
+        2027
+      ],
+      "linked": [
+        "路径 BUPT|005|085410|全日制|方向02|2028|统考|一志愿",
+        "指标 L3-报考可行性|考试风险|初复试科目稳定性",
+        "指标 L3-报考可行性|招生路径|名额口径可靠性",
+        "指标 L3-报考可行性|招生路径|全日制统考路径明确性"
+      ]
+    },
+    {
+      "key": "C4-quota-caliber",
+      "claim_id": 52,
+      "action": "已存在-跳过",
+      "status": "已核验",
+      "is_candidate": false,
+      "applicable_years": [
+        2027
+      ],
+      "linked": [
+        "路径 BUPT|005|085410|全日制|方向01|2028|统考|一志愿",
+        "路径 BUPT|005|085410|全日制|方向02|2028|统考|一志愿",
+        "指标 L3-报考可行性|招生路径|名额口径可靠性"
+      ]
+    },
+    {
+      "key": "C5-mentor-not-listed",
+      "claim_id": 53,
+      "action": "已存在-跳过",
+      "status": "已核验",
+      "is_candidate": false,
+      "applicable_years": [
+        2027
+      ],
+      "linked": [
+        "路径 BUPT|005|085410|全日制|方向01|2028|统考|一志愿",
+        "路径 BUPT|005|085410|全日制|方向02|2028|统考|一志愿",
+        "指标 L3-研究培养|科研匹配|导师招生路径证据"
+      ]
+    },
+    {
+      "key": "C6-exam-adjust",
+      "claim_id": 54,
+      "action": "已存在-跳过",
+      "status": "已核验",
+      "is_candidate": false,
+      "applicable_years": [
+        2027
+      ],
+      "linked": [
+        "路径 BUPT|005|085410|全日制|方向01|2028|统考|一志愿",
+        "路径 BUPT|005|085410|全日制|方向02|2028|统考|一志愿",
+        "指标 L3-报考可行性|考试风险|初复试科目稳定性"
+      ]
+    },
+    {
+      "key": "C7-granularity-caveat",
+      "claim_id": 55,
+      "action": "已存在-跳过",
+      "status": "待核验",
+      "is_candidate": true,
+      "applicable_years": [
+        2027
+      ],
+      "linked": [
+        "路径 BUPT|005|085410|全日制|方向01|2028|统考|一志愿",
+        "路径 BUPT|005|085410|全日制|方向02|2028|统考|一志愿",
+        "指标 L3-报考可行性|考试风险|初复试科目稳定性"
+      ]
+    },
+    {
+      "key": "C8-2028-not-published",
+      "claim_id": 56,
+      "action": "已存在-跳过",
+      "status": "待核验",
+      "is_candidate": true,
+      "applicable_years": [
+        2028
+      ],
+      "linked": [
+        "路径 BUPT|005|085410|全日制|方向01|2028|统考|一志愿",
+        "路径 BUPT|005|085410|全日制|方向02|2028|统考|一志愿",
+        "指标 L3-报考可行性|招生路径|全日制统考路径明确性"
+      ]
+    }
+  ],
+  "paths_updated": [
+    "BUPT|005|085410|全日制|方向01|2028|统考|一志愿（已追加过，跳过）",
+    "BUPT|005|085410|全日制|方向02|2028|统考|一志愿（已追加过，跳过）"
+  ],
+  "warnings": []
+}

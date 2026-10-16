@@ -1,0 +1,89 @@
+{
+  "source": "/mnt/data/Phase3_7C_情景覆盖率门槛修复版.xlsx",
+  "subset": [
+    0,
+    1,
+    2,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    13
+  ],
+  "weights": {
+    "base": 0.80275,
+    "career": 0.7954148471615721
+  },
+  "cases": {
+    "full": {
+      "D2": 1.0,
+      "E2": 4.0,
+      "F2": 4.0,
+      "G2": 4.0,
+      "H2": 4.0,
+      "I2": "可比较（非录取预测）",
+      "K2": 1.0,
+      "L2": 1.0,
+      "M2": 1.0,
+      "P2": "可比较（非录取预测）",
+      "Q2": "可比较（非录取预测）",
+      "R2": "可比较（非录取预测）"
+    },
+    "divergence": {
+      "D2": 0.80275,
+      "E2": 4.0,
+      "F2": null,
+      "G2": 4.0,
+      "H2": 4.0,
+      "I2": "可比较（非录取预测）",
+      "K2": 0.795414847161572,
+      "L2": 0.846030701754386,
+      "M2": 0.834088785046729,
+      "P2": "证据不足",
+      "Q2": "可比较（非录取预测）",
+      "R2": "可比较（非录取预测）"
+    },
+    "excluded": {
+      "D2": 1.0,
+      "E2": null,
+      "F2": null,
+      "G2": null,
+      "H2": null,
+      "I2": "硬约束不符-排除",
+      "K2": 1.0,
+      "L2": 1.0,
+      "M2": 1.0,
+      "P2": "硬约束不符-排除",
+      "Q2": "硬约束不符-排除",
+      "R2": "硬约束不符-排除"
+    },
+    "invalid": {
+      "D2": 0.0,
+      "E2": null,
+      "F2": null,
+      "G2": null,
+      "H2": null,
+      "I2": "证据不足",
+      "K2": 0.0,
+      "L2": 0.0,
+      "M2": 0.0,
+      "P2": "证据不足",
+      "Q2": "证据不足",
+      "R2": "证据不足"
+    }
+  },
+  "checks": {
+    "full_all_scores_4": true,
+    "divergence_base_ge_80": true,
+    "divergence_career_lt_80": true,
+    "divergence_career_blank": true,
+    "divergence_career_insufficient": true,
+    "excluded_all_blank": true,
+    "invalid_coverage_zero": true
+  },
+  "engine": "LibreOffice headless on isolated artifact_tool-exported test copies"
+}

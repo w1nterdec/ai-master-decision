@@ -1,0 +1,1128 @@
+{
+  "engine_version": "0.4.0",
+  "evaluation_year": 2028,
+  "coverage_threshold": 0.8,
+  "disclaimer": "输出不含录取概率，不构成录取预测或院校排名",
+  "paths": [
+    {
+      "path_key": "BUPT|005|085410|全日制|方向01|2028|统考|一志愿",
+      "label": "P01 北京邮电大学",
+      "evaluation_year": 2028,
+      "weight_profile": "phase37c_demo",
+      "hard_constraint": {
+        "eligibility": "待核验",
+        "qualification_2028": "2028资格未确认",
+        "reasons": [
+          "硬约束待确认：other_constraints_ok",
+          "2028 核验状态为「待2028核验」，不得标记已确认"
+        ]
+      },
+      "coverage": {
+        "indicator_count_coverage": 0.0,
+        "base_weight_coverage": 0.0,
+        "scenario_weight_coverage": {
+          "career": 0.0,
+          "admission": 0.0,
+          "research": 0.0
+        },
+        "threshold": 0.8
+      },
+      "base": {
+        "weight_coverage": 0.0,
+        "indicator_count_coverage": 0.0,
+        "score": null,
+        "status": "硬约束待确认-不可比较",
+        "valid_count": 0,
+        "total_count": 18,
+        "reasons": []
+      },
+      "scenarios": {
+        "career": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "admission": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "research": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        }
+      },
+      "objective_A_training_value": {
+        "code": "training_value",
+        "name": "A. 培养与职业价值评估（是否值得读）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "objective_B_first_choice_value": {
+        "code": "first_choice_value",
+        "name": "B. 一志愿报考价值评估（是否值得投入唯一一次考研机会）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "unknown_indicators": [
+        "L3-职业发展|AI工程就业|岗位与实习机会",
+        "L3-职业发展|AI工程就业|产业合作可参与性",
+        "L3-职业发展|长期成长|Agent/LLM能力积累",
+        "L3-职业发展|长期成长|具身/机器人发展空间",
+        "L3-报考可行性|招生路径|全日制统考路径明确性",
+        "L3-报考可行性|招生路径|名额口径可靠性",
+        "L3-报考可行性|考试风险|初复试科目稳定性",
+        "L3-报考可行性|考试风险|复试规则可预期性",
+        "L3-研究培养|科研匹配|研究方向相关性",
+        "L3-研究培养|科研匹配|导师招生路径证据",
+        "L3-研究培养|培养可进入|实践机制适用性",
+        "L3-研究培养|培养可进入|平台资源可进入性",
+        "L3-地域生态|产业机会|城市AI岗位生态",
+        "L3-地域生态|产业机会|实习合作半径",
+        "L3-地域生态|生活适配|地域与气候",
+        "L3-成本安排|经济成本|学费及住宿",
+        "L3-成本安排|经济成本|异地与额外支出",
+        "L3-成本安排|培养安排|学制与企业实践"
+      ],
+      "invalid_indicators": [],
+      "limitations": [
+        "覆盖率达标≠结论可靠：未评分权重仍可能改变排序",
+        "80% 为可配置演示门槛，非可靠性证明",
+        "输出不含录取概率，不构成录取预测",
+        "2028 资格状态：2028资格未确认；历史候选≠2028 正式资格"
+      ],
+      "disclaimer": "本输出不含录取概率，不构成录取预测或院校排名"
+    },
+    {
+      "path_key": "BUPT|005|085410|全日制|方向02|2028|统考|一志愿",
+      "label": "P02 北京邮电大学",
+      "evaluation_year": 2028,
+      "weight_profile": "phase37c_demo",
+      "hard_constraint": {
+        "eligibility": "待核验",
+        "qualification_2028": "2028资格未确认",
+        "reasons": [
+          "硬约束待确认：other_constraints_ok",
+          "2028 核验状态为「待2028核验」，不得标记已确认"
+        ]
+      },
+      "coverage": {
+        "indicator_count_coverage": 0.0,
+        "base_weight_coverage": 0.0,
+        "scenario_weight_coverage": {
+          "career": 0.0,
+          "admission": 0.0,
+          "research": 0.0
+        },
+        "threshold": 0.8
+      },
+      "base": {
+        "weight_coverage": 0.0,
+        "indicator_count_coverage": 0.0,
+        "score": null,
+        "status": "硬约束待确认-不可比较",
+        "valid_count": 0,
+        "total_count": 18,
+        "reasons": []
+      },
+      "scenarios": {
+        "career": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "admission": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "research": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        }
+      },
+      "objective_A_training_value": {
+        "code": "training_value",
+        "name": "A. 培养与职业价值评估（是否值得读）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "objective_B_first_choice_value": {
+        "code": "first_choice_value",
+        "name": "B. 一志愿报考价值评估（是否值得投入唯一一次考研机会）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "unknown_indicators": [
+        "L3-职业发展|AI工程就业|岗位与实习机会",
+        "L3-职业发展|AI工程就业|产业合作可参与性",
+        "L3-职业发展|长期成长|Agent/LLM能力积累",
+        "L3-职业发展|长期成长|具身/机器人发展空间",
+        "L3-报考可行性|招生路径|全日制统考路径明确性",
+        "L3-报考可行性|招生路径|名额口径可靠性",
+        "L3-报考可行性|考试风险|初复试科目稳定性",
+        "L3-报考可行性|考试风险|复试规则可预期性",
+        "L3-研究培养|科研匹配|研究方向相关性",
+        "L3-研究培养|科研匹配|导师招生路径证据",
+        "L3-研究培养|培养可进入|实践机制适用性",
+        "L3-研究培养|培养可进入|平台资源可进入性",
+        "L3-地域生态|产业机会|城市AI岗位生态",
+        "L3-地域生态|产业机会|实习合作半径",
+        "L3-地域生态|生活适配|地域与气候",
+        "L3-成本安排|经济成本|学费及住宿",
+        "L3-成本安排|经济成本|异地与额外支出",
+        "L3-成本安排|培养安排|学制与企业实践"
+      ],
+      "invalid_indicators": [],
+      "limitations": [
+        "覆盖率达标≠结论可靠：未评分权重仍可能改变排序",
+        "80% 为可配置演示门槛，非可靠性证明",
+        "输出不含录取概率，不构成录取预测",
+        "2028 资格状态：2028资格未确认；历史候选≠2028 正式资格"
+      ],
+      "disclaimer": "本输出不含录取概率，不构成录取预测或院校排名"
+    },
+    {
+      "path_key": "UESTC|008|085404|全日制|计算机技术|2028|统考|一志愿",
+      "label": "P03 电子科技大学",
+      "evaluation_year": 2028,
+      "weight_profile": "phase37c_demo",
+      "hard_constraint": {
+        "eligibility": "待核验",
+        "qualification_2028": "2028资格未确认",
+        "reasons": [
+          "硬约束待确认：other_constraints_ok",
+          "2028 核验状态为「待2028核验」，不得标记已确认"
+        ]
+      },
+      "coverage": {
+        "indicator_count_coverage": 0.0,
+        "base_weight_coverage": 0.0,
+        "scenario_weight_coverage": {
+          "career": 0.0,
+          "admission": 0.0,
+          "research": 0.0
+        },
+        "threshold": 0.8
+      },
+      "base": {
+        "weight_coverage": 0.0,
+        "indicator_count_coverage": 0.0,
+        "score": null,
+        "status": "硬约束待确认-不可比较",
+        "valid_count": 0,
+        "total_count": 18,
+        "reasons": []
+      },
+      "scenarios": {
+        "career": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "admission": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "research": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        }
+      },
+      "objective_A_training_value": {
+        "code": "training_value",
+        "name": "A. 培养与职业价值评估（是否值得读）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "objective_B_first_choice_value": {
+        "code": "first_choice_value",
+        "name": "B. 一志愿报考价值评估（是否值得投入唯一一次考研机会）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "unknown_indicators": [
+        "L3-职业发展|AI工程就业|岗位与实习机会",
+        "L3-职业发展|AI工程就业|产业合作可参与性",
+        "L3-职业发展|长期成长|Agent/LLM能力积累",
+        "L3-职业发展|长期成长|具身/机器人发展空间",
+        "L3-报考可行性|招生路径|全日制统考路径明确性",
+        "L3-报考可行性|招生路径|名额口径可靠性",
+        "L3-报考可行性|考试风险|初复试科目稳定性",
+        "L3-报考可行性|考试风险|复试规则可预期性",
+        "L3-研究培养|科研匹配|研究方向相关性",
+        "L3-研究培养|科研匹配|导师招生路径证据",
+        "L3-研究培养|培养可进入|实践机制适用性",
+        "L3-研究培养|培养可进入|平台资源可进入性",
+        "L3-地域生态|产业机会|城市AI岗位生态",
+        "L3-地域生态|产业机会|实习合作半径",
+        "L3-地域生态|生活适配|地域与气候",
+        "L3-成本安排|经济成本|学费及住宿",
+        "L3-成本安排|经济成本|异地与额外支出",
+        "L3-成本安排|培养安排|学制与企业实践"
+      ],
+      "invalid_indicators": [],
+      "limitations": [
+        "覆盖率达标≠结论可靠：未评分权重仍可能改变排序",
+        "80% 为可配置演示门槛，非可靠性证明",
+        "输出不含录取概率，不构成录取预测",
+        "2028 资格状态：2028资格未确认；历史候选≠2028 正式资格"
+      ],
+      "disclaimer": "本输出不含录取概率，不构成录取预测或院校排名"
+    },
+    {
+      "path_key": "UESTC|028|085404|全日制|计算机技术|2028|统考|一志愿",
+      "label": "P04 电子科技大学",
+      "evaluation_year": 2028,
+      "weight_profile": "phase37c_demo",
+      "hard_constraint": {
+        "eligibility": "待核验",
+        "qualification_2028": "2028资格未确认",
+        "reasons": [
+          "硬约束待确认：other_constraints_ok",
+          "2028 核验状态为「待2028核验」，不得标记已确认"
+        ]
+      },
+      "coverage": {
+        "indicator_count_coverage": 0.0,
+        "base_weight_coverage": 0.0,
+        "scenario_weight_coverage": {
+          "career": 0.0,
+          "admission": 0.0,
+          "research": 0.0
+        },
+        "threshold": 0.8
+      },
+      "base": {
+        "weight_coverage": 0.0,
+        "indicator_count_coverage": 0.0,
+        "score": null,
+        "status": "硬约束待确认-不可比较",
+        "valid_count": 0,
+        "total_count": 18,
+        "reasons": []
+      },
+      "scenarios": {
+        "career": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "admission": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "research": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        }
+      },
+      "objective_A_training_value": {
+        "code": "training_value",
+        "name": "A. 培养与职业价值评估（是否值得读）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "objective_B_first_choice_value": {
+        "code": "first_choice_value",
+        "name": "B. 一志愿报考价值评估（是否值得投入唯一一次考研机会）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "unknown_indicators": [
+        "L3-职业发展|AI工程就业|岗位与实习机会",
+        "L3-职业发展|AI工程就业|产业合作可参与性",
+        "L3-职业发展|长期成长|Agent/LLM能力积累",
+        "L3-职业发展|长期成长|具身/机器人发展空间",
+        "L3-报考可行性|招生路径|全日制统考路径明确性",
+        "L3-报考可行性|招生路径|名额口径可靠性",
+        "L3-报考可行性|考试风险|初复试科目稳定性",
+        "L3-报考可行性|考试风险|复试规则可预期性",
+        "L3-研究培养|科研匹配|研究方向相关性",
+        "L3-研究培养|科研匹配|导师招生路径证据",
+        "L3-研究培养|培养可进入|实践机制适用性",
+        "L3-研究培养|培养可进入|平台资源可进入性",
+        "L3-地域生态|产业机会|城市AI岗位生态",
+        "L3-地域生态|产业机会|实习合作半径",
+        "L3-地域生态|生活适配|地域与气候",
+        "L3-成本安排|经济成本|学费及住宿",
+        "L3-成本安排|经济成本|异地与额外支出",
+        "L3-成本安排|培养安排|学制与企业实践"
+      ],
+      "invalid_indicators": [],
+      "limitations": [
+        "覆盖率达标≠结论可靠：未评分权重仍可能改变排序",
+        "80% 为可配置演示门槛，非可靠性证明",
+        "输出不含录取概率，不构成录取预测",
+        "2028 资格状态：2028资格未确认；历史候选≠2028 正式资格"
+      ],
+      "disclaimer": "本输出不含录取概率，不构成录取预测或院校排名"
+    },
+    {
+      "path_key": "SEU|009|085410|全日制|人工智能|2028|统考|一志愿",
+      "label": "P05 东南大学",
+      "evaluation_year": 2028,
+      "weight_profile": "phase37c_demo",
+      "hard_constraint": {
+        "eligibility": "待核验",
+        "qualification_2028": "2028资格未确认",
+        "reasons": [
+          "硬约束待确认：other_constraints_ok",
+          "2028 核验状态为「待2028核验」，不得标记已确认"
+        ]
+      },
+      "coverage": {
+        "indicator_count_coverage": 0.0,
+        "base_weight_coverage": 0.0,
+        "scenario_weight_coverage": {
+          "career": 0.0,
+          "admission": 0.0,
+          "research": 0.0
+        },
+        "threshold": 0.8
+      },
+      "base": {
+        "weight_coverage": 0.0,
+        "indicator_count_coverage": 0.0,
+        "score": null,
+        "status": "硬约束待确认-不可比较",
+        "valid_count": 0,
+        "total_count": 18,
+        "reasons": []
+      },
+      "scenarios": {
+        "career": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "admission": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "research": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        }
+      },
+      "objective_A_training_value": {
+        "code": "training_value",
+        "name": "A. 培养与职业价值评估（是否值得读）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "objective_B_first_choice_value": {
+        "code": "first_choice_value",
+        "name": "B. 一志愿报考价值评估（是否值得投入唯一一次考研机会）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "unknown_indicators": [
+        "L3-职业发展|AI工程就业|岗位与实习机会",
+        "L3-职业发展|AI工程就业|产业合作可参与性",
+        "L3-职业发展|长期成长|Agent/LLM能力积累",
+        "L3-职业发展|长期成长|具身/机器人发展空间",
+        "L3-报考可行性|招生路径|全日制统考路径明确性",
+        "L3-报考可行性|招生路径|名额口径可靠性",
+        "L3-报考可行性|考试风险|初复试科目稳定性",
+        "L3-报考可行性|考试风险|复试规则可预期性",
+        "L3-研究培养|科研匹配|研究方向相关性",
+        "L3-研究培养|科研匹配|导师招生路径证据",
+        "L3-研究培养|培养可进入|实践机制适用性",
+        "L3-研究培养|培养可进入|平台资源可进入性",
+        "L3-地域生态|产业机会|城市AI岗位生态",
+        "L3-地域生态|产业机会|实习合作半径",
+        "L3-地域生态|生活适配|地域与气候",
+        "L3-成本安排|经济成本|学费及住宿",
+        "L3-成本安排|经济成本|异地与额外支出",
+        "L3-成本安排|培养安排|学制与企业实践"
+      ],
+      "invalid_indicators": [],
+      "limitations": [
+        "覆盖率达标≠结论可靠：未评分权重仍可能改变排序",
+        "80% 为可配置演示门槛，非可靠性证明",
+        "输出不含录取概率，不构成录取预测",
+        "2028 资格状态：2028资格未确认；历史候选≠2028 正式资格"
+      ],
+      "disclaimer": "本输出不含录取概率，不构成录取预测或院校排名"
+    },
+    {
+      "path_key": "HFUT|005|085410|全日制|人工智能|2028|统考|一志愿",
+      "label": "P06 合肥工业大学",
+      "evaluation_year": 2028,
+      "weight_profile": "phase37c_demo",
+      "hard_constraint": {
+        "eligibility": "待核验",
+        "qualification_2028": "2028资格未确认",
+        "reasons": [
+          "硬约束待确认：other_constraints_ok",
+          "2028 核验状态为「待2028核验」，不得标记已确认"
+        ]
+      },
+      "coverage": {
+        "indicator_count_coverage": 0.0,
+        "base_weight_coverage": 0.0,
+        "scenario_weight_coverage": {
+          "career": 0.0,
+          "admission": 0.0,
+          "research": 0.0
+        },
+        "threshold": 0.8
+      },
+      "base": {
+        "weight_coverage": 0.0,
+        "indicator_count_coverage": 0.0,
+        "score": null,
+        "status": "硬约束待确认-不可比较",
+        "valid_count": 0,
+        "total_count": 18,
+        "reasons": []
+      },
+      "scenarios": {
+        "career": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "admission": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "research": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        }
+      },
+      "objective_A_training_value": {
+        "code": "training_value",
+        "name": "A. 培养与职业价值评估（是否值得读）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "objective_B_first_choice_value": {
+        "code": "first_choice_value",
+        "name": "B. 一志愿报考价值评估（是否值得投入唯一一次考研机会）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "unknown_indicators": [
+        "L3-职业发展|AI工程就业|岗位与实习机会",
+        "L3-职业发展|AI工程就业|产业合作可参与性",
+        "L3-职业发展|长期成长|Agent/LLM能力积累",
+        "L3-职业发展|长期成长|具身/机器人发展空间",
+        "L3-报考可行性|招生路径|全日制统考路径明确性",
+        "L3-报考可行性|招生路径|名额口径可靠性",
+        "L3-报考可行性|考试风险|初复试科目稳定性",
+        "L3-报考可行性|考试风险|复试规则可预期性",
+        "L3-研究培养|科研匹配|研究方向相关性",
+        "L3-研究培养|科研匹配|导师招生路径证据",
+        "L3-研究培养|培养可进入|实践机制适用性",
+        "L3-研究培养|培养可进入|平台资源可进入性",
+        "L3-地域生态|产业机会|城市AI岗位生态",
+        "L3-地域生态|产业机会|实习合作半径",
+        "L3-地域生态|生活适配|地域与气候",
+        "L3-成本安排|经济成本|学费及住宿",
+        "L3-成本安排|经济成本|异地与额外支出",
+        "L3-成本安排|培养安排|学制与企业实践"
+      ],
+      "invalid_indicators": [],
+      "limitations": [
+        "覆盖率达标≠结论可靠：未评分权重仍可能改变排序",
+        "80% 为可配置演示门槛，非可靠性证明",
+        "输出不含录取概率，不构成录取预测",
+        "2028 资格状态：2028资格未确认；历史候选≠2028 正式资格"
+      ],
+      "disclaimer": "本输出不含录取概率，不构成录取预测或院校排名"
+    },
+    {
+      "path_key": "HFUT|021|085410|全日制|卓工路径|2028|统考|一志愿",
+      "label": "P07 合肥工业大学",
+      "evaluation_year": 2028,
+      "weight_profile": "phase37c_demo",
+      "hard_constraint": {
+        "eligibility": "待核验",
+        "qualification_2028": "2028资格未确认",
+        "reasons": [
+          "硬约束待确认：other_constraints_ok",
+          "2028 核验状态为「待2028核验」，不得标记已确认"
+        ]
+      },
+      "coverage": {
+        "indicator_count_coverage": 0.0,
+        "base_weight_coverage": 0.0,
+        "scenario_weight_coverage": {
+          "career": 0.0,
+          "admission": 0.0,
+          "research": 0.0
+        },
+        "threshold": 0.8
+      },
+      "base": {
+        "weight_coverage": 0.0,
+        "indicator_count_coverage": 0.0,
+        "score": null,
+        "status": "硬约束待确认-不可比较",
+        "valid_count": 0,
+        "total_count": 18,
+        "reasons": []
+      },
+      "scenarios": {
+        "career": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "admission": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "research": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        }
+      },
+      "objective_A_training_value": {
+        "code": "training_value",
+        "name": "A. 培养与职业价值评估（是否值得读）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "objective_B_first_choice_value": {
+        "code": "first_choice_value",
+        "name": "B. 一志愿报考价值评估（是否值得投入唯一一次考研机会）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "unknown_indicators": [
+        "L3-职业发展|AI工程就业|岗位与实习机会",
+        "L3-职业发展|AI工程就业|产业合作可参与性",
+        "L3-职业发展|长期成长|Agent/LLM能力积累",
+        "L3-职业发展|长期成长|具身/机器人发展空间",
+        "L3-报考可行性|招生路径|全日制统考路径明确性",
+        "L3-报考可行性|招生路径|名额口径可靠性",
+        "L3-报考可行性|考试风险|初复试科目稳定性",
+        "L3-报考可行性|考试风险|复试规则可预期性",
+        "L3-研究培养|科研匹配|研究方向相关性",
+        "L3-研究培养|科研匹配|导师招生路径证据",
+        "L3-研究培养|培养可进入|实践机制适用性",
+        "L3-研究培养|培养可进入|平台资源可进入性",
+        "L3-地域生态|产业机会|城市AI岗位生态",
+        "L3-地域生态|产业机会|实习合作半径",
+        "L3-地域生态|生活适配|地域与气候",
+        "L3-成本安排|经济成本|学费及住宿",
+        "L3-成本安排|经济成本|异地与额外支出",
+        "L3-成本安排|培养安排|学制与企业实践"
+      ],
+      "invalid_indicators": [],
+      "limitations": [
+        "覆盖率达标≠结论可靠：未评分权重仍可能改变排序",
+        "80% 为可配置演示门槛，非可靠性证明",
+        "输出不含录取概率，不构成录取预测",
+        "2028 资格状态：2028资格未确认；历史候选≠2028 正式资格"
+      ],
+      "disclaimer": "本输出不含录取概率，不构成录取预测或院校排名"
+    },
+    {
+      "path_key": "HFUT|023|085410|全日制|创新学院|2028|统考|一志愿",
+      "label": "P08 合肥工业大学",
+      "evaluation_year": 2028,
+      "weight_profile": "phase37c_demo",
+      "hard_constraint": {
+        "eligibility": "待核验",
+        "qualification_2028": "2028资格未确认",
+        "reasons": [
+          "硬约束待确认：other_constraints_ok",
+          "2028 核验状态为「待2028核验」，不得标记已确认"
+        ]
+      },
+      "coverage": {
+        "indicator_count_coverage": 0.0,
+        "base_weight_coverage": 0.0,
+        "scenario_weight_coverage": {
+          "career": 0.0,
+          "admission": 0.0,
+          "research": 0.0
+        },
+        "threshold": 0.8
+      },
+      "base": {
+        "weight_coverage": 0.0,
+        "indicator_count_coverage": 0.0,
+        "score": null,
+        "status": "硬约束待确认-不可比较",
+        "valid_count": 0,
+        "total_count": 18,
+        "reasons": []
+      },
+      "scenarios": {
+        "career": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "admission": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "research": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        }
+      },
+      "objective_A_training_value": {
+        "code": "training_value",
+        "name": "A. 培养与职业价值评估（是否值得读）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "objective_B_first_choice_value": {
+        "code": "first_choice_value",
+        "name": "B. 一志愿报考价值评估（是否值得投入唯一一次考研机会）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "unknown_indicators": [
+        "L3-职业发展|AI工程就业|岗位与实习机会",
+        "L3-职业发展|AI工程就业|产业合作可参与性",
+        "L3-职业发展|长期成长|Agent/LLM能力积累",
+        "L3-职业发展|长期成长|具身/机器人发展空间",
+        "L3-报考可行性|招生路径|全日制统考路径明确性",
+        "L3-报考可行性|招生路径|名额口径可靠性",
+        "L3-报考可行性|考试风险|初复试科目稳定性",
+        "L3-报考可行性|考试风险|复试规则可预期性",
+        "L3-研究培养|科研匹配|研究方向相关性",
+        "L3-研究培养|科研匹配|导师招生路径证据",
+        "L3-研究培养|培养可进入|实践机制适用性",
+        "L3-研究培养|培养可进入|平台资源可进入性",
+        "L3-地域生态|产业机会|城市AI岗位生态",
+        "L3-地域生态|产业机会|实习合作半径",
+        "L3-地域生态|生活适配|地域与气候",
+        "L3-成本安排|经济成本|学费及住宿",
+        "L3-成本安排|经济成本|异地与额外支出",
+        "L3-成本安排|培养安排|学制与企业实践"
+      ],
+      "invalid_indicators": [],
+      "limitations": [
+        "覆盖率达标≠结论可靠：未评分权重仍可能改变排序",
+        "80% 为可配置演示门槛，非可靠性证明",
+        "输出不含录取概率，不构成录取预测",
+        "2028 资格状态：2028资格未确认；历史候选≠2028 正式资格"
+      ],
+      "disclaimer": "本输出不含录取概率，不构成录取预测或院校排名"
+    },
+    {
+      "path_key": "SWJTU|004|085410|全日制|人工智能|2028|统考|一志愿",
+      "label": "P09 西南交通大学",
+      "evaluation_year": 2028,
+      "weight_profile": "phase37c_demo",
+      "hard_constraint": {
+        "eligibility": "待核验",
+        "qualification_2028": "2028资格未确认",
+        "reasons": [
+          "硬约束待确认：other_constraints_ok",
+          "2028 核验状态为「待2028核验」，不得标记已确认"
+        ]
+      },
+      "coverage": {
+        "indicator_count_coverage": 0.0,
+        "base_weight_coverage": 0.0,
+        "scenario_weight_coverage": {
+          "career": 0.0,
+          "admission": 0.0,
+          "research": 0.0
+        },
+        "threshold": 0.8
+      },
+      "base": {
+        "weight_coverage": 0.0,
+        "indicator_count_coverage": 0.0,
+        "score": null,
+        "status": "硬约束待确认-不可比较",
+        "valid_count": 0,
+        "total_count": 18,
+        "reasons": []
+      },
+      "scenarios": {
+        "career": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "admission": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "research": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        }
+      },
+      "objective_A_training_value": {
+        "code": "training_value",
+        "name": "A. 培养与职业价值评估（是否值得读）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "objective_B_first_choice_value": {
+        "code": "first_choice_value",
+        "name": "B. 一志愿报考价值评估（是否值得投入唯一一次考研机会）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "unknown_indicators": [
+        "L3-职业发展|AI工程就业|岗位与实习机会",
+        "L3-职业发展|AI工程就业|产业合作可参与性",
+        "L3-职业发展|长期成长|Agent/LLM能力积累",
+        "L3-职业发展|长期成长|具身/机器人发展空间",
+        "L3-报考可行性|招生路径|全日制统考路径明确性",
+        "L3-报考可行性|招生路径|名额口径可靠性",
+        "L3-报考可行性|考试风险|初复试科目稳定性",
+        "L3-报考可行性|考试风险|复试规则可预期性",
+        "L3-研究培养|科研匹配|研究方向相关性",
+        "L3-研究培养|科研匹配|导师招生路径证据",
+        "L3-研究培养|培养可进入|实践机制适用性",
+        "L3-研究培养|培养可进入|平台资源可进入性",
+        "L3-地域生态|产业机会|城市AI岗位生态",
+        "L3-地域生态|产业机会|实习合作半径",
+        "L3-地域生态|生活适配|地域与气候",
+        "L3-成本安排|经济成本|学费及住宿",
+        "L3-成本安排|经济成本|异地与额外支出",
+        "L3-成本安排|培养安排|学制与企业实践"
+      ],
+      "invalid_indicators": [],
+      "limitations": [
+        "覆盖率达标≠结论可靠：未评分权重仍可能改变排序",
+        "80% 为可配置演示门槛，非可靠性证明",
+        "输出不含录取概率，不构成录取预测",
+        "2028 资格状态：2028资格未确认；历史候选≠2028 正式资格"
+      ],
+      "disclaimer": "本输出不含录取概率，不构成录取预测或院校排名"
+    },
+    {
+      "path_key": "SWJTU|048|085410|全日制|人工智能|2028|统考|一志愿",
+      "label": "P10 西南交通大学",
+      "evaluation_year": 2028,
+      "weight_profile": "phase37c_demo",
+      "hard_constraint": {
+        "eligibility": "待核验",
+        "qualification_2028": "2028资格未确认",
+        "reasons": [
+          "硬约束待确认：other_constraints_ok",
+          "2028 核验状态为「待2028核验」，不得标记已确认"
+        ]
+      },
+      "coverage": {
+        "indicator_count_coverage": 0.0,
+        "base_weight_coverage": 0.0,
+        "scenario_weight_coverage": {
+          "career": 0.0,
+          "admission": 0.0,
+          "research": 0.0
+        },
+        "threshold": 0.8
+      },
+      "base": {
+        "weight_coverage": 0.0,
+        "indicator_count_coverage": 0.0,
+        "score": null,
+        "status": "硬约束待确认-不可比较",
+        "valid_count": 0,
+        "total_count": 18,
+        "reasons": []
+      },
+      "scenarios": {
+        "career": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "admission": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        },
+        "research": {
+          "weight_coverage": 0.0,
+          "indicator_count_coverage": 0.0,
+          "score": null,
+          "status": "硬约束待确认-不可比较",
+          "valid_count": 0,
+          "total_count": 18,
+          "reasons": []
+        }
+      },
+      "objective_A_training_value": {
+        "code": "training_value",
+        "name": "A. 培养与职业价值评估（是否值得读）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "objective_B_first_choice_value": {
+        "code": "first_choice_value",
+        "name": "B. 一志愿报考价值评估（是否值得投入唯一一次考研机会）",
+        "status": "待核验",
+        "score": null,
+        "weight_coverage": 0.0,
+        "group_coverage": {},
+        "reasons": [
+          "硬约束待核验，双目标评估暂不可用"
+        ]
+      },
+      "unknown_indicators": [
+        "L3-职业发展|AI工程就业|岗位与实习机会",
+        "L3-职业发展|AI工程就业|产业合作可参与性",
+        "L3-职业发展|长期成长|Agent/LLM能力积累",
+        "L3-职业发展|长期成长|具身/机器人发展空间",
+        "L3-报考可行性|招生路径|全日制统考路径明确性",
+        "L3-报考可行性|招生路径|名额口径可靠性",
+        "L3-报考可行性|考试风险|初复试科目稳定性",
+        "L3-报考可行性|考试风险|复试规则可预期性",
+        "L3-研究培养|科研匹配|研究方向相关性",
+        "L3-研究培养|科研匹配|导师招生路径证据",
+        "L3-研究培养|培养可进入|实践机制适用性",
+        "L3-研究培养|培养可进入|平台资源可进入性",
+        "L3-地域生态|产业机会|城市AI岗位生态",
+        "L3-地域生态|产业机会|实习合作半径",
+        "L3-地域生态|生活适配|地域与气候",
+        "L3-成本安排|经济成本|学费及住宿",
+        "L3-成本安排|经济成本|异地与额外支出",
+        "L3-成本安排|培养安排|学制与企业实践"
+      ],
+      "invalid_indicators": [],
+      "limitations": [
+        "覆盖率达标≠结论可靠：未评分权重仍可能改变排序",
+        "80% 为可配置演示门槛，非可靠性证明",
+        "输出不含录取概率，不构成录取预测",
+        "2028 资格状态：2028资格未确认；历史候选≠2028 正式资格"
+      ],
+      "disclaimer": "本输出不含录取概率，不构成录取预测或院校排名"
+    }
+  ]
+}
