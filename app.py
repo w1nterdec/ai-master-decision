@@ -85,11 +85,17 @@ def render_current_page() -> None:
         if page == PAGE_COCKPIT:
             pages_cockpit.render(session, rows, profile_code=profile, threshold=threshold)
         elif page == PAGE_EXPLORE:
-            pages_explore.render(session, rows, threshold=threshold)
+            pages_explore.render(
+                session, rows, threshold=threshold, profile_code=profile
+            )
         elif page == PAGE_COMPARE:
-            pages_compare.render(session, rows, threshold=threshold)
+            pages_compare.render(
+                session, rows, threshold=threshold, profile_code=profile
+            )
         elif page == PAGE_RISK:
-            pages_risk.render(session, rows, threshold=threshold)
+            pages_risk.render(
+                session, rows, threshold=threshold, profile_code=profile
+            )
         elif page == PAGE_PROFILE:
             pages_profile.render(session, rows, profile_code=profile)
         else:  # pragma: no cover - 兜底

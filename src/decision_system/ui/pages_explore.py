@@ -18,11 +18,13 @@ from decision_system.ui.blocks import (
     evidence_counts_text,
     path_label,
     render_archive_actions,
+    render_demo_weight_notice,
     render_disclaimer,
     render_evidence_list,
     render_path_facts,
     render_qualification,
     render_quotas,
+    render_research_dossier,
     render_unknown,
 )
 from decision_system.ui.formatting import pct, render_status, show_value
@@ -59,7 +61,7 @@ def _filter_bar(summaries: Sequence[PathSummary]) -> list[PathSummary]:
     return out
 
 
-def _school_card(s: SchoolSummary) -> None:
+def _school_card(session, s: SchoolSummary) -> None:
     with st.container(border=True):
         st.markdown(f"### {s.name}")
         st.caption(
@@ -82,6 +84,24 @@ def _school_card(s: SchoolSummary) -> None:
             else:
                 st.caption("暂无记录（不代表没有风险）。")
         st.caption(f"证据：{s.evidence.summary_text}")
+        st.caption(
+            "研究状态："
+            + ("已有已核验证据" if s.evidence.verified_claims else "尚无已核验证据")
+            + f"；未登记来源 {s.evidence.unregistered_sources} 个"
+            + f"；适用 2028 的已核验声明 {s.evidence.verified_2028_claims} 条"
+        )
+        # Phase 6.1｜M7：历史研究信息（第一层）与 2028 正式资格（第二层）分开
+        dossier = view_service.build_research_dossier(
+            session, list(s.paths), title=f"{s.name} 历史研究档案"
+        )
+        render_research_dossier(
+            dossier,
+            layer2_lines=(
+                f"2028 正式资格：{s.qualification_2028}",
+                f"适用 2028 的已核验声明：{s.evidence.verified_2028_claims} 条",
+            ),
+            layer2_state=s.qualification_2028,
+        )
 
 
 def _path_detail(session, p: PathSummary) -> None:
@@ -103,7 +123,7 @@ def _path_detail(session, p: PathSummary) -> None:
     render_archive_actions(p, key_prefix="explore_")
 
 
-def render(session, rows, *, threshold: float = 0.8) -> None:
+def render(session, rows, *, threshold: float = 0.8, profile_code: str = "phase37c_demo") -> None:
     st.subheader("院校探索")
     summaries = view_service.load_path_summaries(session, rows)
     if not summaries:
@@ -111,6 +131,7 @@ def render(session, rows, *, threshold: float = 0.8) -> None:
         return
 
     schools = view_service.build_school_summaries(session, summaries, threshold=threshold)
+    render_demo_weight_notice(profile_code)
     st.caption(
         "浏览的是**事实与证据**，不是推荐结果。"
         "系统不会替你指定唯一目标，也不会给出录取概率。"
@@ -125,8 +146,11 @@ def render(session, rows, *, threshold: float = 0.8) -> None:
 
     codes = {p.school_code for p in filtered}
     shown = [s for s in schools if s.code in codes]
+    st.caption(
+        "学校排列顺序仅为展示便利（已核验证据多的在前），**不构成院校排名**。"
+    )
     for s in shown:
-        _school_card(s)
+        _school_card(session, s)
         paths = [p for p in s.paths if p.path_id in {x.path_id for x in filtered}]
         if not paths:
             continue

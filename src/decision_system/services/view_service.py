@@ -45,11 +45,18 @@ from decision_system.ui.viewmodels import (
     ComparisonSummary,
     DecisionArchive,
     EvidenceSummary,
+    FactItem,
+    GRADE_A,
+    GRADE_B,
+    GRADE_C,
     PathSummary,
     QuotaItem,
+    ResearchDossier,
     RiskGap,
     RiskSummary,
     SchoolSummary,
+    VERIFIED_TEXTS,
+    grade_claim,
     COMPARE_DIMENSIONS,
 )
 
@@ -241,7 +248,9 @@ def build_school_summaries(
         # 职业价值 / 报考风险：分别取关联维度覆盖情况（当前无评分时一律待评估）
         career_state = _eval_state(max(coverages) if coverages else None, threshold)
         risk_state = career_state  # 评分矩阵尚未分维度建立，保持一致口径
-        verified_items = [it for p in paths for it in p.evidence.items if it.status == VERIFIED]
+        verified_items = [
+            it for p in paths for it in p.evidence.items if it.status in VERIFIED_TEXTS
+        ]
         strengths = tuple(i.statement for i in verified_items[:3])
         risks: list[str] = []
         for p in paths:
@@ -343,6 +352,73 @@ def build_comparison(
             )
         )
     return ComparisonSummary(paths=tuple(paths), rows=tuple(rows))
+
+
+# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Phase 6.1｜历史研究档案（M7 双层展示的第一层）
+# ---------------------------------------------------------------------------
+def _fact_from_claim(item: ClaimItem) -> FactItem:
+    """把展示用声明转成带分级的事实条目（不改变任何数据）。"""
+    limitation: str | None = None
+    if item.source_status not in VERIFIED_TEXTS:
+        limitation = "来源未核验或无本体登记，不可作为决策依据"
+    elif item.status not in VERIFIED_TEXTS:
+        limitation = "声明未核验，不可作为决策依据"
+    return FactItem(
+        grade=grade_claim(item),
+        statement=item.statement,
+        year_text=item.year_text,
+        source_title=item.source_title,
+        source_status=item.source_status,
+        is_2028=item.is_2028,
+        limitation=limitation,
+    )
+
+
+def build_research_dossier(
+    session: Session,
+    paths: Sequence[PathSummary],
+    *,
+    title: str,
+) -> ResearchDossier:
+    """汇总若干路径的历史研究材料，按 A/B/C/D 四类分组。
+
+    纪律：
+        * 只读，不写库；
+        * **不参与评分、不参与 2028 资格判定**；
+        * A/B/C 来自已有声明，D 来自「尚未取得数据的指标」。
+    """
+    a: list[FactItem] = []
+    b: list[FactItem] = []
+    c: list[FactItem] = []
+    unknown: list[str] = []
+
+    seen: set[str] = set()
+    for p in paths:
+        for item in p.evidence.items:
+            fact = _fact_from_claim(item)
+            key = f"{fact.grade}|{fact.statement}"
+            if key in seen:
+                continue
+            seen.add(key)
+            if fact.grade == GRADE_A:
+                a.append(fact)
+            elif fact.grade == GRADE_C:
+                c.append(fact)
+            else:
+                b.append(fact)
+        for t in p.unknown_indicators:
+            if t not in unknown:
+                unknown.append(t)
+
+    return ResearchDossier(
+        title=title,
+        grade_a=tuple(a),
+        grade_b=tuple(b),
+        grade_c=tuple(c),
+        unknown_topics=tuple(unknown),
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -188,6 +188,8 @@ def _weight_editor(
                     reason="界面调整",
                 )
                 st.success(f"已保存 {node.name}：{current} → {new_val}（已写审计日志）")
-                st.rerun()
+                # Phase 6.1｜M8：此处原本调用 st 的 rerun 接口，它会抛出 RerunException
+                # 并被 db_session() 的 except 分支捕获执行 rollback，
+                # 导致「提示已保存但改动被静默回滚」。改为依赖按钮点击自身的重跑。
             except Exception as exc:
                 st.error(f"保存失败：{exc}")

@@ -18,6 +18,7 @@ from decision_system.services import view_service
 from decision_system.ui.blocks import (
     path_short,
     render_comparison_legend,
+    render_demo_weight_notice,
     render_disclaimer,
 )
 from decision_system.ui.formatting import pct, render_status
@@ -45,12 +46,18 @@ def _select_paths(summaries: Sequence[PathSummary]) -> list[PathSummary]:
     return [options[pid] for pid in picked]
 
 
-def render(session, rows, *, threshold: float = 0.8) -> None:
+def render(session, rows, *, threshold: float = 0.8, profile_code: str = "phase37c_demo") -> None:
     st.subheader("多校对比")
     summaries = view_service.load_path_summaries(session, rows)
     if len(summaries) < 2:
         st.info("至少需要 2 条路径才能对比。")
         return
+
+    render_demo_weight_notice(profile_code)
+    st.caption(
+        "比较单位是**招生路径**（学校+学院+专业+学习方式+方向）。"
+        "同一专业的不同方向是**各自独立的路径**，应当并列比较，而不是先看学校再看方向。"
+    )
 
     picked = _select_paths(summaries)
     if len(picked) < 2:

@@ -24,7 +24,12 @@ from typing import Any, Sequence
 
 UNKNOWN = "暂无数据"
 PENDING = "待核验"
+# 注意：数据层枚举 `ClaimStatus.VERIFIED` / `VerificationStatus.VERIFIED` 的取值是
+# 「已核验」，而展示层文案沿用「已核实」。二者长期并存导致过判定失效
+# （Phase 6.1 实测发现：已核验证据被误判为待核验）。判定一律走下面的取值集合，
+# 展示文案继续用 VERIFIED = "已核实"。
 VERIFIED = "已核实"
+VERIFIED_TEXTS: frozenset[str] = frozenset({"已核验", "已核实"})
 CONFLICT = "存在冲突"
 NOT_APPLICABLE = "不适用"
 UNJUDGEABLE = "无法判断"
@@ -216,6 +221,72 @@ class PathSummary:
         return self.qualification_2028 == QUAL_CONFIRMED
 
 
+# --- Phase 6.1｜研究资料四类分级（A/B/C/D） ---------------------------------
+# 分级只影响「怎么展示」，不影响任何评分与资格判定：
+#   A 已核实事实  —— 来源已核验 + 声明已核验；可展示，须带年份与来源
+#   B 待核验研究资料 —— 候选映射 / 来源未登记 / 待核验；可展示，不可作为决策依据
+#   C 推断或主观评价 —— 由 A/B 推导的判断；可展示，须标注为推断
+#   D 未知        —— 无任何材料；显示「未知」，严禁补 0
+GRADE_A = "A 已核实事实"
+GRADE_B = "B 待核验研究资料"
+GRADE_C = "C 推断或主观评价"
+GRADE_D = "D 未知"
+
+# 声明原文中出现这些前缀时，判为「推断」而非事实
+_INFERENCE_MARKERS = ("【推断", "推断·", "（推断）", "推测")
+
+
+@dataclass(frozen=True)
+class FactItem:
+    """一条带分级的研究事实（Phase 6.1）。"""
+
+    grade: str
+    statement: str
+    year_text: str
+    source_title: str
+    source_status: str
+    is_2028: bool
+    limitation: str | None = None
+
+
+def grade_claim(item: "ClaimItem") -> str:
+    """按证据状态把声明归入 A/B/C/D 之一（只做分类，不改数据）。"""
+    text = item.statement or ""
+    if any(m in text for m in _INFERENCE_MARKERS):
+        return GRADE_C
+    if item.status in VERIFIED_TEXTS and item.source_status in VERIFIED_TEXTS:
+        return GRADE_A
+    return GRADE_B
+
+
+@dataclass(frozen=True)
+class ResearchDossier:
+    """历史研究档案（Phase 6.1｜M7 双层展示的第一层）。
+
+    与 2028 正式评分**严格分离**：这里只放历史/待核验材料，
+    不参与任何评分、不参与 2028 资格判定。
+    """
+
+    title: str
+    grade_a: tuple[FactItem, ...] = ()
+    grade_b: tuple[FactItem, ...] = ()
+    grade_c: tuple[FactItem, ...] = ()
+    unknown_topics: tuple[str, ...] = ()   # D 类：尚未取得数据的指标/主题
+
+    @property
+    def is_empty(self) -> bool:
+        return not (self.grade_a or self.grade_b or self.grade_c or self.unknown_topics)
+
+    @property
+    def counts_text(self) -> str:
+        return (
+            f"A 已核实 {len(self.grade_a)} 条 · "
+            f"B 待核验 {len(self.grade_b)} 条 · "
+            f"C 推断 {len(self.grade_c)} 条 · "
+            f"D 未知 {len(self.unknown_topics)} 项"
+        )
+
+
 @dataclass(frozen=True)
 class SchoolSummary:
     """学校卡片视图（聚合其下全部路径）。"""
@@ -295,6 +366,8 @@ class DecisionArchive:
 
     candidate_path_ids: list[int] = field(default_factory=list)
     favorite_path_ids: list[int] = field(default_factory=list)
+    excluded_path_ids: list[int] = field(default_factory=list)   # 暂不考虑
+    path_notes: dict[str, str] = field(default_factory=dict)     # {"<path_id>": "我的理由"}
     active_profile_code: str = "phase37c_demo"
     is_demo_profile: bool = True
     scenario_code: str | None = None
@@ -305,6 +378,8 @@ class DecisionArchive:
         return {
             "candidate_path_ids": list(self.candidate_path_ids),
             "favorite_path_ids": list(self.favorite_path_ids),
+            "excluded_path_ids": list(self.excluded_path_ids),
+            "path_notes": dict(self.path_notes),
             "active_profile_code": self.active_profile_code,
             "is_demo_profile": self.is_demo_profile,
             "scenario_code": self.scenario_code,
@@ -317,9 +392,23 @@ class DecisionArchive:
         return cls(
             candidate_path_ids=list(d.get("candidate_path_ids") or []),
             favorite_path_ids=list(d.get("favorite_path_ids") or []),
+            excluded_path_ids=list(d.get("excluded_path_ids") or []),
+            path_notes={
+                str(k): str(v) for k, v in (d.get("path_notes") or {}).items()
+            },
             active_profile_code=str(d.get("active_profile_code") or "phase37c_demo"),
             is_demo_profile=bool(d.get("is_demo_profile", True)),
             scenario_code=d.get("scenario_code"),
             notes=list(d.get("notes") or []),
             updated_at=d.get("updated_at"),
         )
+
+    def note_of(self, path_id: int) -> str:
+        return self.path_notes.get(str(path_id), "")
+
+    def set_note(self, path_id: int, text: str) -> None:
+        key = str(path_id)
+        if text.strip():
+            self.path_notes[key] = text.strip()
+        else:
+            self.path_notes.pop(key, None)

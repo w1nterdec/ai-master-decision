@@ -17,11 +17,13 @@ from decision_system.services import view_service
 from decision_system.ui.blocks import (
     path_label,
     path_short,
+    render_demo_weight_notice,
     render_disclaimer,
     render_path_header,
     render_quotas,
+    render_research_dossier,
 )
-from decision_system.ui.formatting import render_status, show_value
+from decision_system.ui.formatting import pct, render_status, show_value
 from decision_system.ui.viewmodels import (
     QUAL_CONFIRMED,
     USER_CONFIRMED_BACKGROUND,
@@ -54,7 +56,7 @@ def _render_hard(rs) -> None:
         st.caption("引擎未给出额外理由。")
 
 
-def render(session, rows, *, threshold: float = 0.8) -> None:
+def render(session, rows, *, threshold: float = 0.8, profile_code: str = "phase37c_demo") -> None:
     st.subheader("风险与路径规划")
     summaries = view_service.load_path_summaries(session, rows)
     if not summaries:
@@ -64,12 +66,30 @@ def render(session, rows, *, threshold: float = 0.8) -> None:
     st.warning(
         "本页面说明**风险与不确定性**，不提供录取概率、上岸率或任何形式的成功率估计。"
     )
+    render_demo_weight_notice(profile_code)
     with st.expander("本次风险判断的前提（用户已确认）", expanded=False):
         for k, v in USER_CONFIRMED_BACKGROUND:
             st.markdown(f"- **{k}**：{v}")
 
     p = _pick(summaries)
     rs = view_service.build_risk_summary(session, p)
+
+    # Phase 6.1｜M7：历史研究信息（第一层）与该路径 2028 正式状态（第二层）分开
+    with st.container(border=True):
+        st.markdown("### 该路径的历史研究信息（第一层）")
+        dossier = view_service.build_research_dossier(
+            session, [p], title=f"{path_label(p)} 历史研究档案"
+        )
+        render_research_dossier(
+            dossier,
+            layer2_lines=(
+                f"2028 正式资格：{p.qualification_2028}",
+                f"硬约束：{p.eligibility}",
+                f"有效覆盖率：{pct(p.coverage)}（门槛 {pct(threshold)}）",
+                f"适用 2028 的已核验声明：{p.evidence.verified_2028_claims} 条",
+            ),
+            layer2_state=p.qualification_2028,
+        )
 
     render_path_header(p)
     st.markdown(f"风险评估等级：{render_status(rs.risk_level)}")
@@ -80,6 +100,23 @@ def render(session, rows, *, threshold: float = 0.8) -> None:
         )
 
     _render_hard(rs)
+
+    st.markdown("---")
+    st.markdown("### 2028 资格不确定性")
+    if p.qualification_2028 != QUAL_CONFIRMED:
+        st.error(
+            f"该路径的 2028 正式资格为「{p.qualification_2028}」，"
+            "即**未取得**。在 2028 招生目录发布并通过严格核验之前，"
+            "不能把它当作一个确定的报考选项。"
+        )
+        st.caption(
+            f"该路径已核验声明 {p.evidence.verified_claims} 条，"
+            f"其中适用 2028 的 **{p.evidence.verified_2028_claims} 条**。"
+            "历史年度（如 2027）的已核实事实只能说明该路径**历史上存在**，"
+            "不能证明 2028 仍然存在。"
+        )
+    else:
+        st.success("该路径已确认 2028 正式资格。")
 
     st.markdown("---")
     st.markdown("### 一志愿风险")

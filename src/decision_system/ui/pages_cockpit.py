@@ -12,17 +12,23 @@ from __future__ import annotations
 from typing import Sequence
 
 import streamlit as st
+from sqlalchemy import select
 
+from decision_system.models.entities import WeightProfile
 from decision_system.services import view_service
 from decision_system.ui.blocks import (
     get_archive,
     path_label,
+    render_demo_weight_notice,
     render_disclaimer,
+    render_research_dossier,
 )
 from decision_system.ui.formatting import pct, show_value
 from decision_system.ui.viewmodels import (
+    QUAL_CONFIRMED,
     USER_CONFIRMED_BACKGROUND,
     PathSummary,
+    SchoolSummary,
 )
 
 
@@ -43,6 +49,84 @@ def _metric_row(summaries: Sequence[PathSummary], schools) -> None:
     c4.metric("待核验声明", f"{pending_claims} 条", "不参与评分")
 
 
+def _focus_schools(
+    session,
+    summaries: Sequence[PathSummary],
+    schools: Sequence[SchoolSummary],
+    archive,
+) -> list[tuple[SchoolSummary, list[PathSummary]]]:
+    """重点研究学校 = **用户自己在档案里标记过的路径**所属的学校。
+
+    系统**不预设**任何学校为重点/最优；未标记即为空。
+    """
+    marked = list(archive.favorite_path_ids) + [
+        i for i in archive.candidate_path_ids if i not in archive.favorite_path_ids
+    ]
+    excluded = set(archive.excluded_path_ids)
+    by_id = {p.path_id: p for p in summaries}
+    by_code: dict[str, list[PathSummary]] = {}
+    for pid in marked:
+        if pid in excluded:
+            continue
+        p = by_id.get(pid)
+        if p is None:
+            continue
+        by_code.setdefault(p.school_code, []).append(p)
+    out: list[tuple[SchoolSummary, list[PathSummary]]] = []
+    for s in schools:
+        if s.code in by_code:
+            out.append((s, by_code[s.code]))
+    return out
+
+
+def _render_focus(session, focus, *, threshold: float) -> None:
+    st.markdown("### 我重点研究的学校")
+    if not focus:
+        st.info(
+            "你还没有把任何路径标记为「重点关注」或「候选」。"
+            "标记后，这里会显示该学校的**已核实历史事实、优势与风险、最重要的待核验问题**。\n\n"
+            "系统不会替你指定重点学校——重点由你的档案决定。"
+        )
+        return
+
+    for s, paths in focus:
+        with st.container(border=True):
+            st.markdown(f"#### {s.name}")
+            st.caption(
+                f"地区：{show_value(s.region)}　|　在库路径 {s.path_count} 条　|　"
+                f"2028 资格：{s.qualification_2028}"
+            )
+            dossier = view_service.build_research_dossier(
+                session, paths, title=f"{s.name} 历史研究档案"
+            )
+            lines = [
+                f"2028 正式资格：{s.qualification_2028}"
+                f"（{'已确认' if s.qualification_2028 == QUAL_CONFIRMED else '未确认，按未取得处理'}）",
+                f"该学校在库路径的有效覆盖率："
+                + "；".join(pct(p.coverage) for p in paths),
+            ]
+            render_research_dossier(
+                dossier, layer2_lines=lines, layer2_state=s.qualification_2028
+            )
+
+            st.markdown("**最重要的待核验问题**")
+            gaps = view_service.build_risk_gaps(session, paths)
+            if not gaps:
+                st.caption("该学校暂无阻断性数据缺口记录。")
+            for g in gaps[:3]:
+                tag = "🔴" if g.priority_text == "高" else (
+                    "🟠" if g.priority_text == "中" else "🟡"
+                )
+                st.markdown(f"{tag} **{g.topic}**（优先级：{g.priority_text}）")
+                st.caption(g.reason)
+            st.caption(
+                "以上问题按**对结论的影响力**排序，不是同等优先级；"
+                "标为「可能改变选择」的项属于前提级信息。"
+            )
+            for p in paths:
+                st.markdown(f"- 我标记的路径：{path_label(p)}（{p.direction or '未分方向'}）")
+
+
 def render(session, rows, *, profile_code: str, threshold: float = 0.8) -> None:
     st.subheader("决策驾驶舱")
     summaries = view_service.load_path_summaries(session, rows)
@@ -56,6 +140,14 @@ def render(session, rows, *, profile_code: str, threshold: float = 0.8) -> None:
     st.caption(
         f"评估年份：2028　|　权重配置：`{profile_code}`　|　"
         f"覆盖率门槛：{threshold:.0%}　|　证据闸门：严格（年份不匹配即拒）"
+    )
+
+    # 审计项 A-01：驾驶舱此前完全没有演示权重提示
+    prof = session.execute(
+        select(WeightProfile).where(WeightProfile.code == profile_code)
+    ).scalar_one_or_none()
+    render_demo_weight_notice(
+        profile_code, is_demo=True if prof is None else bool(prof.is_demo)
     )
 
     confirmed = [p for p in summaries if p.qualification_is_confirmed]
@@ -90,6 +182,17 @@ def render(session, rows, *, profile_code: str, threshold: float = 0.8) -> None:
                     flags.append("可能改变选择")
                 st.caption(" · ".join(flags) if flags else "暂无影响标注")
     st.caption("以上为**数据缺口**，不是院校推荐。补齐证据后结论才可能改变。")
+
+    # --- 我重点研究的学校（来自用户档案，非系统预设） ----------------------
+    archive = get_archive()
+    _render_focus(
+        session,
+        _focus_schools(session, summaries, schools, archive),
+        threshold=threshold,
+    )
+    st.caption(
+        "「重点研究学校」由**你在档案中的标记**决定，系统不预先指定任何学校。"
+    )
 
     # --- 用户已确认背景 ---------------------------------------------------
     with st.expander("我的决策前提（用户已确认，非系统推断）", expanded=False):

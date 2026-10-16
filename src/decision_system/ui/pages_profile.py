@@ -90,6 +90,33 @@ def _build_markdown(
         lines.append("- （暂无）")
     lines.append("")
 
+    lines.append("## 三·补、暂不考虑的路径")
+    lines.append("")
+    if archive.excluded_path_ids:
+        for pid in archive.excluded_path_ids:
+            p = by_id.get(pid)
+            lines.append(f"- {path_label(p) if p else f'（路径 #{pid} 已不在库中）'}")
+            note = archive.note_of(pid)
+            if note:
+                lines.append(f"  - 我的理由：{note}")
+    else:
+        lines.append("- （暂无）")
+    lines.append("")
+
+    lines.append("## 三·补二、我对具体路径的判断与理由")
+    lines.append("")
+    if archive.path_notes:
+        for pid, note in archive.path_notes.items():
+            p = by_id.get(int(pid)) if str(pid).isdigit() else None
+            lines.append(f"- {path_label(p) if p else f'（路径 #{pid}）'}：{note}")
+    else:
+        lines.append("- （暂无）")
+    lines.append("")
+    lines.append(
+        "> 以上理由为用户自己的判断，**不改变任何证据的真实性，也不自动修改任何评分**。"
+    )
+    lines.append("")
+
     lines.append("## 四、权重配置状态")
     lines.append("")
     for r in profile_rows:
@@ -160,7 +187,7 @@ def render(session, rows, *, profile_code: str) -> None:
     else:
         st.caption("暂无候选。可在「院校探索」中加入。")
 
-    st.markdown("### 关注路径")
+    st.markdown("### 重点关注路径")
     if archive.favorite_path_ids:
         for pid in list(archive.favorite_path_ids):
             p = by_id.get(pid)
@@ -171,7 +198,32 @@ def render(session, rows, *, profile_code: str) -> None:
                 archive.favorite_path_ids.remove(pid)
                 persist_archive()
     else:
-        st.caption("暂无关注。")
+        st.caption("暂无重点关注。可在「院校探索」中加入。")
+
+    st.markdown("### 暂不考虑的路径")
+    if archive.excluded_path_ids:
+        for pid in list(archive.excluded_path_ids):
+            p = by_id.get(pid)
+            name = path_label(p) if p else f"（路径 #{pid} 已不在库中）"
+            c1, c2 = st.columns([5, 1])
+            c1.markdown(f"- {name}")
+            if c2.button("移除", key=f"prof_del_x_{pid}"):
+                archive.excluded_path_ids.remove(pid)
+                persist_archive()
+    else:
+        st.caption("暂无「暂不考虑」的路径。")
+    st.caption(
+        "标记只表达**你自己的判断**，不会改变证据真实性，也不会自动修改任何评分。"
+    )
+
+    st.markdown("### 我对具体路径的判断与理由")
+    if archive.path_notes:
+        for pid, note in list(archive.path_notes.items()):
+            p = by_id.get(int(pid)) if str(pid).isdigit() else None
+            name = path_label(p) if p else f"（路径 #{pid}）"
+            st.markdown(f"- **{name}**：{note}")
+    else:
+        st.caption("尚未对任何路径写下你的判断。可在「院校探索」的路径详情中填写。")
 
     st.markdown("### 权重配置状态")
     profile_rows = _profile_rows(session)
