@@ -24,6 +24,7 @@ from decision_system.ui import (
     pages_overview,
     pages_paths,
     pages_profile,
+    pages_result,
     pages_risk,
     pages_tree,
 )
@@ -39,6 +40,7 @@ PAGE_COMPARE = "③ 多校对比"
 PAGE_TREE = "④ 动态决策树"
 PAGE_RISK = "⑤ 风险与路径规划"
 PAGE_PROFILE = "⑥ 我的决策档案"
+PAGE_RESULT = "⑦ 择校结果总览"
 
 # --- 高级功能（Phase 4.1 原页面，全部保留） ---------------------------------
 PAGE_ADVANCED = "⚙️ 高级功能"
@@ -55,6 +57,7 @@ MAIN_PAGES = [
     PAGE_TREE,
     PAGE_RISK,
     PAGE_PROFILE,
+    PAGE_RESULT,
     PAGE_ADVANCED,
 ]
 ADV_PAGES = [ADV_EVIDENCE, ADV_PATHS, ADV_MODEL, ADV_ANALYSIS, ADV_OVERVIEW]
@@ -72,6 +75,11 @@ def render_current_page() -> None:
     page = st.session_state.get("nav_page", PAGE_COCKPIT)
     profile = _active_profile()
     threshold = _config().coverage_threshold
+
+    if page == PAGE_RESULT:
+        # 择校结果总览：只读整合 JSON，不依赖数据库会话
+        pages_result.render(profile_code=profile)
+        return
 
     with db_session() as session:
         if page == PAGE_TREE:
