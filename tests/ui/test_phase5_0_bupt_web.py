@@ -71,11 +71,11 @@ def _goto(at, page: str):
 
 
 @pytest.fixture(scope="module")
-def at_factory(tmp_path_factory):
+def at_factory(tmp_path_factory, research_migrated_db):
     import os
 
     db_path = tmp_path_factory.mktemp("phase5_0_ui") / "ui.db"
-    shutil.copy2(PROD_DB, db_path)
+    shutil.copy2(research_migrated_db, db_path)
     old = os.environ.get("DECISION_DB_PATH")
     os.environ["DECISION_DB_PATH"] = str(db_path)
 

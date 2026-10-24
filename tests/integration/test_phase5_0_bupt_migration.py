@@ -42,7 +42,6 @@ from decision_system.services.decision_service import SqlAlchemyEvidenceResolver
 
 ROOT = Path(__file__).resolve().parents[2]
 PROD_DB = ROOT / "data" / "decision.db"
-BASELINE_DB = ROOT / "data" / "backup" / "decision.db.bak_phase5_0"
 
 P01 = "BUPT|005|085410|全日制|方向01|2028|统考|一志愿"
 P02 = "BUPT|005|085410|全日制|方向02|2028|统考|一志愿"
@@ -65,12 +64,11 @@ def _load_migration_module():
 
 
 @pytest.fixture(scope="module")
-def migrated_db(tmp_path_factory) -> Path:
+def migrated_db(tmp_path_factory, research_baseline_db) -> Path:
     """把正式库复制到临时目录后执行迁移，绝不污染 data/decision.db。"""
-    assert BASELINE_DB.is_file(), "缺少迁移前基线备份，无法做前后比对"
     d = tmp_path_factory.mktemp("phase5_0")
     db = d / "decision.db"
-    shutil.copy2(BASELINE_DB, db)
+    shutil.copy2(research_baseline_db, db)
 
     mod = _load_migration_module()
     old_db, old_backup, old_report = mod.DB_PATH, mod.BACKUP_PATH, mod.REPORT_PATH
@@ -299,7 +297,7 @@ def test_06_no_fake_2028_confirmation(sess):
 # ---------------------------------------------------------------------------
 # 7. 其他 4 所学校完全未被改动
 # ---------------------------------------------------------------------------
-def test_07_other_schools_untouched(migrated_db: Path):
+def test_07_other_schools_untouched(migrated_db: Path, research_baseline_db):
     def snapshot(path: Path) -> dict:
         engine = create_engine(f"sqlite:///{path}", future=True)
         with engine.connect() as conn:
@@ -315,7 +313,7 @@ def test_07_other_schools_untouched(migrated_db: Path):
         engine.dispose()
         return {"paths": [tuple(r) for r in rows], "scores": [tuple(r) for r in scores]}
 
-    before, after = snapshot(BASELINE_DB), snapshot(migrated_db)
+    before, after = snapshot(research_baseline_db), snapshot(migrated_db)
     non_bupt_before = [r for r in before["paths"] if not r[0].startswith("BUPT|")]
     non_bupt_after = [r for r in after["paths"] if not r[0].startswith("BUPT|")]
     assert non_bupt_before == non_bupt_after, "其他学校的路径记录被改动"
@@ -329,7 +327,7 @@ def test_07_other_schools_untouched(migrated_db: Path):
 # ---------------------------------------------------------------------------
 # 8. 权重与演示权重完全未被改动
 # ---------------------------------------------------------------------------
-def test_08_weights_untouched(migrated_db: Path):
+def test_08_weights_untouched(migrated_db: Path, research_baseline_db):
     def snap(path: Path):
         engine = create_engine(f"sqlite:///{path}", future=True)
         with engine.connect() as conn:
@@ -342,13 +340,13 @@ def test_08_weights_untouched(migrated_db: Path):
         engine.dispose()
         return [tuple(r) for r in prof], [tuple(r) for r in nodes]
 
-    assert snap(BASELINE_DB) == snap(migrated_db), "权重被迁移脚本改动"
+    assert snap(research_baseline_db) == snap(migrated_db), "权重被迁移脚本改动"
 
 
 # ---------------------------------------------------------------------------
 # 9. 历史候选映射：既不删除，也不自动升级
 # ---------------------------------------------------------------------------
-def test_09_history_candidate_claims_unchanged(migrated_db: Path):
+def test_09_history_candidate_claims_unchanged(migrated_db: Path, research_baseline_db):
     def snap(path: Path) -> dict[int, tuple[str, bool]]:
         engine = create_engine(f"sqlite:///{path}", future=True)
         with engine.connect() as conn:
@@ -358,7 +356,7 @@ def test_09_history_candidate_claims_unchanged(migrated_db: Path):
         engine.dispose()
         return {r[0]: (r[1], bool(r[2])) for r in rows}
 
-    before, after = snap(BASELINE_DB), snap(migrated_db)
+    before, after = snap(research_baseline_db), snap(migrated_db)
     for cid, val in before.items():
         assert cid in after, f"历史声明 #{cid} 被删除"
         assert after[cid] == val, f"历史声明 #{cid} 状态被改动：{val} -> {after[cid]}"

@@ -14,7 +14,11 @@ from typing import Sequence
 import pandas as pd
 import streamlit as st
 
+from decision_system.ui.theme import data_table
+
 from decision_system.services import view_service
+from decision_system.services.research_catalog import csv_export
+from decision_system.ui.research_blocks import get_catalog, render_record
 from decision_system.ui.blocks import (
     path_short,
     render_comparison_legend,
@@ -30,9 +34,7 @@ MAX_SELECT = 4
 def _select_paths(summaries: Sequence[PathSummary]) -> list[PathSummary]:
     options = {p.path_id: p for p in summaries}
     default = [
-        pid
-        for pid in st.session_state.get("compare_selection", [])
-        if pid in options
+        pid for pid in st.session_state.get("compare_selection", []) if pid in options
     ]
     picked = st.multiselect(
         f"选择要对比的路径（最多 {MAX_SELECT} 条；比较单位是「路径」，不是学校）",
@@ -46,7 +48,9 @@ def _select_paths(summaries: Sequence[PathSummary]) -> list[PathSummary]:
     return [options[pid] for pid in picked]
 
 
-def render(session, rows, *, threshold: float = 0.8, profile_code: str = "phase37c_demo") -> None:
+def render(
+    session, rows, *, threshold: float = 0.8, profile_code: str = "phase37c_demo"
+) -> None:
     st.subheader("多校对比")
     summaries = view_service.load_path_summaries(session, rows)
     if len(summaries) < 2:
@@ -66,6 +70,36 @@ def render(session, rows, *, threshold: float = 0.8, profile_code: str = "phase3
         return
 
     comp = view_service.build_comparison(session, picked)
+
+    catalog = get_catalog()
+    if catalog is not None:
+        st.markdown("### 按主题对比研究依据")
+        st.caption(
+            "并列阅读历史资料原文。层级表示来源范围，不表示已核验；不从描述推算招生名额或录取机会。"
+        )
+        theme = st.selectbox(
+            "对比研究主题", catalog.themes, key="compare_research_theme"
+        )
+        all_records = []
+        for column, p in zip(st.columns(len(picked)), picked):
+            records = catalog.search(path_ids=[p.legacy_id], theme=theme)
+            all_records.extend(catalog.for_path(p.legacy_id))
+            with column:
+                with st.expander(
+                    f"{p.school_name} · {p.college_code} · {p.direction or p.program_code} ｜ {len(records)} 条依据",
+                    expanded=False,
+                ):
+                    if not records:
+                        st.caption("本主题尚无关联研究资料，不代表该校没有对应资源。")
+                    for record in records:
+                        render_record(record)
+        st.download_button(
+            "导出对比路径的全部研究资料",
+            csv_export(all_records),
+            file_name="comparison-research.csv",
+            mime="text/csv",
+            key="compare_research_csv",
+        )
 
     st.caption("比较对象：" + "　｜　".join(path_short(p) for p in comp.paths))
 
@@ -92,7 +126,7 @@ def render(session, rows, *, threshold: float = 0.8, profile_code: str = "phase3
             return "color: #9aa0a6;"
         return ""
 
-    st.dataframe(
+    data_table(
         df.style.map(_style),
         hide_index=True,
         width="stretch",
@@ -113,7 +147,7 @@ def render(session, rows, *, threshold: float = 0.8, profile_code: str = "phase3
         }
         for p in comp.paths
     ]
-    st.dataframe(pd.DataFrame(ev_rows), hide_index=True, width="stretch")
+    data_table(pd.DataFrame(ev_rows), hide_index=True, width="stretch")
 
     st.error("本表**不产生排名，也不宣布最优选择**。")
     st.caption(

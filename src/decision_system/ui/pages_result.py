@@ -19,6 +19,7 @@ import os
 from typing import Dict, List
 
 import streamlit as st
+from decision_system.services.research_catalog import CatalogError, load_catalog
 
 _JSON_PATH = os.path.normpath(
     os.path.join(
@@ -27,12 +28,11 @@ _JSON_PATH = os.path.normpath(
 )
 
 
-@st.cache_data(show_spinner=False)
 def _load_consolidated() -> Dict:
-    if not os.path.exists(_JSON_PATH):
+    try:
+        return load_catalog().data
+    except CatalogError:
         return {}
-    with open(_JSON_PATH, "r", encoding="utf-8") as fh:
-        return json.load(fh)
 
 
 # ---------------------------------------------------------------------------
@@ -40,6 +40,7 @@ def _load_consolidated() -> Dict:
 # ---------------------------------------------------------------------------
 # 各组路径归属（研究分组 ≠ 录取概率分组）
 FOCUS_GROUP = {
+    "P01": "需先确认（801 通信原理与备考方向的匹配）",
     "P02": "主目标候选 · 重点研究",
     "P05": "主目标候选 · 重点研究",
     "P06": "主目标候选 · 重点研究",
@@ -98,7 +99,7 @@ MATRIX = [
 # 一次考研策略梯队（培养价值优先 + 一次风险控制）
 STRATEGY = [
     ("第一梯队（重点备考）", "东南 009 + 合工大 005",
-     "前者资源/就业最强（但名额降），后者风险最平衡（统考升、人形机器人）。两校地理分散，降低同卷撞车风险。"),
+     "历史底稿分别记录了平台资源与统考名额变化，需核验年份、口径和开放度。并行研究不等于同时报考，最终一志愿只能选定一条。"),
     ("第二梯队（高价值高不确定）", "北邮方向02（北京+具身，统考全未知）、西南交大 048（具身+统考约14）",
      "作为『若 2028 目录利好则升级为主攻』的候选。"),
     ("待定", "电子科大 008",
@@ -122,7 +123,7 @@ SENSITIVITY = [
 
 _GRADE_LEGEND = {
     "S1": "官方/目录级",
-    "S2": "学院级已证实资源",
+    "S2": "学院级资料（核验状态另列）",
     "S3": "实验室/研究院级",
     "S4": "全校级线索",
 }
@@ -162,8 +163,8 @@ def render(session=None, *, profile_code: str = "phase37c_demo") -> None:
     # 顶部双层标识（贯穿全页）
     st.info(
         "🟦 **历史研究判断**：基于 2023–2027 各校官网/学院级资料（导师、平台、就业、历史统考名额），"
-        "是**真实存在的研究资源**，但**不等于 2028 官方招生确认**。\n\n"
-        "🟥 **2028 正式招生资格**：截至当前，五校 2028 目录均未发布，全部路径『2028 资格未确认』。"
+        "是**底稿记录的资源线索**，需按来源与适用范围核验，**不等于 2028 官方招生确认**。\n\n"
+        "🟥 **2028 正式招生资格**：本地资料快照未收录可确认资格的 2028 目录，全部路径『2028 资格未确认』。这不是实时发布状态。"
         "历史招生事实不得冒充 2028。"
     )
 
@@ -210,7 +211,7 @@ def render(session=None, *, profile_code: str = "phase37c_demo") -> None:
             st.markdown(f"- **当前建议**：{row['当前建议']}")
     st.caption(
         "⚠️ 上表『培养价值/就业』几乎所有证据都是 2023–2027 学院级或全校级研究资料（S2/S3/S4），"
-        "证明『资源真实存在』，**不证明你 2028 能进该方向、跟到该导师**。"
+        "记录了资源线索，**不证明你 2028 能进该方向、跟到该导师**，需核验原件。"
         "北邮方向02 的科目（408）是 2027 官方已核验；其余四校科目/名额多为历史口径推算。"
     )
 
@@ -253,7 +254,7 @@ def render(session=None, *, profile_code: str = "phase37c_demo") -> None:
 
     # ── ④ 一次考研策略 ───────────────────────────────────────────────────
     st.subheader("④ 一次考研策略")
-    st.caption("你『只考一次、不二战』，核心是：主攻 2–3 条培养价值高且统考风险可控的路径，不把筹码压在最不透明的那条上。")
+    st.caption("你『只考一次、不二战』：并行研究 2–3 条候选路径、共用基础备考，报名时确定一个一志愿。研究分组是历史分析师意见，需要用最新目录复核。")
     for title, targets, why in STRATEGY:
         st.markdown(f"**{title}**：{targets}")
         st.caption(f"　{why}")

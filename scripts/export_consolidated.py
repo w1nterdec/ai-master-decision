@@ -20,8 +20,10 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
+from pathlib import Path
 from typing import Dict, List
 
 import openpyxl
@@ -119,13 +121,16 @@ def _build_evidence(wb) -> Dict:
     header = list(rows[0])
     by_path: Dict[str, List[Dict]] = {}
     flat: List[Dict] = []
-    for row in rows[1:]:
+    for row_number, row in enumerate(rows[1:], start=2):
         pid = _clean(_cell(row, header, "路径ID"))
         if not pid:
             continue
         item = {}
         for cn, key in EVIDENCE_COLS.items():
             item[key] = _clean(_cell(row, header, cn))
+        item["record_id"] = f"R{row_number:04d}"
+        item["source_sheet"] = ws.title
+        item["source_row"] = row_number
         by_path.setdefault(pid, []).append(item)
         flat.append(item)
     return {"by_path": by_path, "flat": flat}
@@ -160,7 +165,9 @@ def export(excel_path: str, out_path: str) -> Dict:
     wb.close()
 
     result = {
-        "source_file": os.path.relpath(excel_path, ROOT),
+        "schema_version": 2,
+        "source_file": os.path.relpath(excel_path, ROOT).replace(os.sep, "/"),
+        "source_sha256": hashlib.sha256(Path(excel_path).read_bytes()).hexdigest(),
         "source_year_note": SOURCE_YEAR_NOTE,
         "paths": paths,
         "research_by_path": ev["by_path"],

@@ -14,6 +14,8 @@ from typing import Sequence
 import pandas as pd
 import streamlit as st
 
+from decision_system.ui.theme import data_table
+
 from decision_system.services.view_service import load_archive, save_archive
 from decision_system.services.decision_policy import DecisionExplanation
 from decision_system.ui.formatting import (
@@ -53,6 +55,8 @@ def toggle_candidate(path_id: int) -> None:
         a.candidate_path_ids.remove(path_id)
     else:
         a.candidate_path_ids.append(path_id)
+        if path_id in a.excluded_path_ids:
+            a.excluded_path_ids.remove(path_id)
     persist_archive()
 
 
@@ -62,6 +66,8 @@ def toggle_favorite(path_id: int) -> None:
         a.favorite_path_ids.remove(path_id)
     else:
         a.favorite_path_ids.append(path_id)
+        if path_id in a.excluded_path_ids:
+            a.excluded_path_ids.remove(path_id)
     persist_archive()
 
 
@@ -95,6 +101,8 @@ def path_label(p: PathSummary) -> str:
     bits = [p.school_name]
     if p.college_name:
         bits.append(p.college_name)
+    elif p.college_code:
+        bits.append(f"学院 {p.college_code}")
     if p.program_code and p.program_code != UNKNOWN:
         bits.append(p.program_code)
     if p.direction:
@@ -104,7 +112,19 @@ def path_label(p: PathSummary) -> str:
 
 def path_short(p: PathSummary) -> str:
     extra = f"（{p.direction}）" if p.direction else ""
-    return f"{p.school_name} {p.program_code}{extra}"
+    return f"{p.school_name} · {p.college_code} · {p.program_code}{extra}"
+
+
+def add_to_comparison(path_id: int) -> None:
+    selected = list(st.session_state.get("compare_selection", []))
+    if path_id not in selected:
+        if len(selected) >= 4:
+            st.toast("已选择 4 条路径，请在对比页移除一条后再添加。")
+            return
+        selected.append(path_id)
+    st.session_state["compare_selection"] = selected
+    st.session_state["compare_multiselect"] = selected
+    st.session_state["nav_page"] = "③ 多校对比"
 
 
 def evidence_counts_text(p: PathSummary) -> str:
@@ -151,7 +171,7 @@ def render_path_facts(p: PathSummary) -> None:
         {"项目": "培养地点", "内容": show_value(p.training_location)},
         {"项目": "招生年份", "内容": str(p.admission_year)},
     ]
-    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+    data_table(pd.DataFrame(rows), hide_index=True, width="stretch")
 
 
 def render_quotas(p: PathSummary) -> None:
@@ -170,7 +190,7 @@ def render_quotas(p: PathSummary) -> None:
         }
         for q in p.quotas
     ]
-    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+    data_table(pd.DataFrame(rows), hide_index=True, width="stretch")
     st.caption("三种口径含义不同，不得互相换算或合并。")
 
 
@@ -196,7 +216,7 @@ def render_unknown(p: PathSummary) -> None:
         st.caption("当前路径无「未知指标」记录。")
         return
     st.markdown(f"**尚未取得有效数据的指标（{len(p.unknown_indicators)} 项）**")
-    st.dataframe(
+    data_table(
         pd.DataFrame({"指标": list(p.unknown_indicators)}),
         hide_index=True,
         width="stretch",
@@ -209,6 +229,13 @@ def render_archive_actions(p: PathSummary, *, key_prefix: str = "") -> None:
 
     纪律：用户标记只影响「我怎么看」，**不改变证据真实性、不自动修改任何评分**。
     """
+    st.button(
+        "加入对比",
+        key=f"{key_prefix}compare_{p.path_id}",
+        on_click=add_to_comparison,
+        args=(p.path_id,),
+        width="stretch",
+    )
     a = get_archive()
     in_cand = p.path_id in a.candidate_path_ids
     in_fav = p.path_id in a.favorite_path_ids
@@ -249,7 +276,9 @@ def render_archive_actions(p: PathSummary, *, key_prefix: str = "") -> None:
         st.success("已保存到你的决策档案。")
 
     if in_exc:
-        st.caption("你已把这条路径标记为「暂不考虑」。这只是你的标记，不影响证据真实性。")
+        st.caption(
+            "你已把这条路径标记为「暂不考虑」。这只是你的标记，不影响证据真实性。"
+        )
     if existing:
         st.caption(f"已保存的理由：{existing}")
 
@@ -283,7 +312,9 @@ def render_demo_weight_notice(profile_code: str, *, is_demo: bool = True) -> Non
         st.caption(f"当前权重配置：`{profile_code}`（用户已确认偏好）")
 
 
-def _render_facts(title: str, facts: Sequence[FactItem], *, icon: str, note: str) -> None:
+def _render_facts(
+    title: str, facts: Sequence[FactItem], *, icon: str, note: str
+) -> None:
     st.markdown(f"**{icon} {title}（{len(facts)} 条）**")
     if not facts:
         st.caption("（暂无）")
@@ -338,7 +369,7 @@ def render_research_dossier(
         st.markdown("")
         st.markdown(f"**❓ D 未知（{len(dossier.unknown_topics)} 项）**")
         if dossier.unknown_topics:
-            st.dataframe(
+            data_table(
                 pd.DataFrame({"尚未取得数据的指标": list(dossier.unknown_topics)}),
                 hide_index=True,
                 width="stretch",
@@ -367,7 +398,9 @@ _LAYER_ICON = {
 }
 
 
-def render_decision_explanation(expl: DecisionExplanation, *, expanded: bool = True) -> None:
+def render_decision_explanation(
+    expl: DecisionExplanation, *, expanded: bool = True
+) -> None:
     """把四层决策解释渲染为可核查的分层卡片。
 
     每一层都给出结论 + 依据；「不二战」作为全局政策贯穿 L3；

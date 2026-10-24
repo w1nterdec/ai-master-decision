@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import pandas as pd
 import streamlit as st
+
+from decision_system.ui.theme import data_table
 from sqlalchemy import select
 
 from decision_system.models.entities import Indicator, WeightProfile
@@ -164,7 +166,7 @@ def _render_scenarios(session, profile_code: str) -> None:
                 f"{sc.name} 权重(%)": round(applied.get(c, 0.0) * 100, 2),
             }
         )
-    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+    data_table(pd.DataFrame(rows), hide_index=True, width="stretch")
     st.caption("情景只改变权重分布，**不改变**任何证据事实与 2028 资格判定。")
 
 
@@ -179,7 +181,7 @@ def _render_profile_admin(session, profile_code: str) -> None:
         }
         for p in profiles
     ]
-    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+    data_table(pd.DataFrame(rows), hide_index=True, width="stretch")
 
     with st.expander("从当前配置派生一个用户版本", expanded=False):
         new_code = st.text_input("新配置代码", value="my_preference_v1", key="tree_new_code")
@@ -225,7 +227,7 @@ def _render_profile_admin(session, profile_code: str) -> None:
     if not history:
         st.caption("暂无权重修改记录。")
     else:
-        st.dataframe(
+        data_table(
             pd.DataFrame(
                 [
                     {
@@ -267,9 +269,9 @@ def render(session, rows, *, profile_code: str) -> None:
 
     st.markdown("### 指标树与当前权重")
     df = _tree_table(session, profile_code)
-    st.dataframe(df.drop(columns=["code"]), hide_index=True, width="stretch")
+    data_table(df.drop(columns=["code"]), hide_index=True, width="stretch")
     with st.expander("指标 code 对照（用于内部核对）", expanded=False):
-        st.dataframe(df[["层级", "指标", "code"]], hide_index=True, width="stretch")
+        data_table(df[["层级", "指标", "code"]], hide_index=True, width="stretch")
 
     st.markdown("---")
     _render_adjust(session, profile_code, profile)

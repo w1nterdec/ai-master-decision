@@ -1,0 +1,53 @@
+name: quality
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: '3.11'
+          - os: windows-latest
+            python: '3.12'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - run: python -m pip install -e ".[dev]"
+      - run: python scripts/bootstrap.py
+      - run: python scripts/check_data.py
+      - run: python -m ruff check .
+      - run: python -m pytest --junitxml=reports/quality-junit.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.os }}
+          path: reports/quality-junit.xml
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t ai-master-decision:test .
+      - name: Start and verify health
+        shell: bash
+        run: |
+          docker run -d --name decision-test -p 127.0.0.1:8501:8501 ai-master-decision:test
+          for attempt in $(seq 1 30); do
+            if curl --fail http://127.0.0.1:8501/_stcore/health; then exit 0; fi
+            sleep 2
+          done
+          docker logs decision-test
+          exit 1
+      - name: Container logs
+        if: always()
+        run: docker logs decision-test

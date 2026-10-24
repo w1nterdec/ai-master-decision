@@ -117,6 +117,7 @@ class ClaimItem:
     source_type: str | None
     url_or_file: str | None
     is_candidate: bool
+    has_conflict: bool = False
 
     @property
     def year_text(self) -> str:
@@ -275,7 +276,7 @@ def grade_claim(
     if item.is_candidate:
         return GRADE_B
     if item.status in VERIFIED_TEXTS and item.source_status in VERIFIED_TEXTS:
-        if not scope_ok or has_conflict:
+        if not scope_ok or has_conflict or item.has_conflict:
             return GRADE_B
         return GRADE_A
     if _is_explicit_inference(item.statement):

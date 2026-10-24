@@ -7,6 +7,8 @@ from typing import Sequence
 import pandas as pd
 import streamlit as st
 
+from decision_system.ui.theme import data_table
+
 from decision_system.services.evidence_service import claims_of_path
 from decision_system.ui.decision_view import (
     PathRow,
@@ -53,7 +55,7 @@ def render(session, rows: Sequence[PathRow]) -> None:
 
     if filtered:
         df = pd.DataFrame([row_to_dict(r) for r in filtered])
-        st.dataframe(df, hide_index=True, width="stretch")
+        data_table(df, hide_index=True, width="stretch")
     else:
         st.warning("当前筛选条件下没有路径。")
 

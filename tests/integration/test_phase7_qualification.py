@@ -45,11 +45,9 @@ QUAL_INDICATOR = "L2-报考可行性|招生路径"
 
 
 @pytest.fixture
-def prod_session(tmp_path):
-    if not PROD_DB.is_file():
-        pytest.skip("生产库不存在，跳过真实数据质检")
+def prod_session(tmp_path, research_migrated_db):
     dest = tmp_path / "decision_copy.db"
-    shutil.copy(PROD_DB, dest)
+    shutil.copy(research_migrated_db, dest)
     engine = create_engine(f"sqlite:///{dest}", future=True)
     factory = sessionmaker(bind=engine, expire_on_commit=False, future=True)
     s = factory()

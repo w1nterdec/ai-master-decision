@@ -432,7 +432,7 @@ def test_explain_no_links(empty_db: Session, scope):
 # 真实数据端到端：北邮 2027 官方已核验证据不得确认 2028 资格
 # ---------------------------------------------------------------------------
 @pytest.fixture(scope="module")
-def prod_db():
+def prod_db(tmp_path_factory, research_migrated_db):
     """生产库的**只读副本**（含 Phase 5.0 北邮官方已核验证据）。
 
     生产库本身不在版本库中（.gitignore 排除），本地缺失时整组用例跳过，
@@ -442,10 +442,8 @@ def prod_db():
 
     from decision_system.services.db import create_sqlite_engine, make_session_factory
 
-    src = Path(__file__).resolve().parents[2] / "data" / "decision.db"
-    if not src.is_file():
-        pytest.skip(f"生产库不存在：{src}（需先执行 scripts/import_excel.py 与 Phase 5.0 迁移）")
-    tmp = Path(tempfile.mkdtemp(prefix="prod_db_")) / "decision.db"
+    src = research_migrated_db
+    tmp = tmp_path_factory.mktemp("prod_db") / "decision.db"
     shutil.copy2(src, tmp)
     engine = create_sqlite_engine(str(tmp))
     factory = make_session_factory(engine)

@@ -13,6 +13,8 @@ import datetime as _dt
 from typing import Sequence
 
 import streamlit as st
+
+from decision_system.ui.theme import data_table
 from sqlalchemy import select
 
 from decision_system.models.entities import WeightProfile
@@ -227,7 +229,7 @@ def render(session, rows, *, profile_code: str) -> None:
 
     st.markdown("### 权重配置状态")
     profile_rows = _profile_rows(session)
-    st.dataframe(profile_rows, hide_index=True, width="stretch")
+    data_table(profile_rows, hide_index=True, width="stretch")
     st.caption(
         "演示配置 ≠ 你的偏好。确认动作在「动态决策树 → 配置管理」中完成。"
     )

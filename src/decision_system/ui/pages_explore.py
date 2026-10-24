@@ -14,6 +14,7 @@ from typing import Sequence
 import streamlit as st
 
 from decision_system.services import view_service
+from decision_system.ui.research_blocks import render_path_research
 from decision_system.ui.blocks import (
     evidence_counts_text,
     path_label,
@@ -108,6 +109,7 @@ def _path_detail(session, p: PathSummary) -> None:
     render_path_facts(p)
     st.markdown("**资格与硬约束**")
     render_qualification(p)
+    render_path_research(p.legacy_id, key=f"explore_research_{p.path_id}")
 
     with st.expander("招生名额（分口径）", expanded=False):
         render_quotas(p)

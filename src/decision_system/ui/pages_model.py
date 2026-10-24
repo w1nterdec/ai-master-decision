@@ -9,6 +9,8 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from decision_system.ui.theme import data_table
+
 from decision_system.engine.weights import WeightTree
 from decision_system.services.decision_service import build_weight_tree
 from decision_system.services.profile_service import (
@@ -104,7 +106,7 @@ def render(session) -> None:
                 for h in hist
             ]
         )
-        st.dataframe(df, hide_index=True, width="stretch")
+        data_table(df, hide_index=True, width="stretch")
 
 
 def _render_tree(session, tree: WeightTree, profile_code: str) -> None:

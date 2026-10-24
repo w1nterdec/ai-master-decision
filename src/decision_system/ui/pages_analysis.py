@@ -10,6 +10,8 @@ from typing import Sequence
 import pandas as pd
 import streamlit as st
 
+from decision_system.ui.theme import data_table
+
 from decision_system.ui.decision_view import PathRow, missing_indicators
 from decision_system.ui.formatting import MISSING_TEXT, pct, render_status, score_text
 
@@ -58,7 +60,7 @@ def render(session, rows: Sequence[PathRow], *, threshold: float = 0.8) -> None:
                 "有效指标": f"{agg.valid_count}/{agg.total_count}",
             }
         )
-    st.dataframe(pd.DataFrame(scen_rows), hide_index=True, width="stretch")
+    data_table(pd.DataFrame(scen_rows), hide_index=True, width="stretch")
 
     st.markdown("#### 双目标（相互独立，禁止互相复制）")
     a, b = d.objective_a, d.objective_b
@@ -85,7 +87,7 @@ def render(session, rows: Sequence[PathRow], *, threshold: float = 0.8) -> None:
     miss = missing_indicators(session, row.path)
     if miss:
         st.markdown(f"共 {len(miss)} 项尚无有效评分：")
-        st.dataframe(pd.DataFrame({"缺失指标": miss}), hide_index=True, width="stretch")
+        data_table(pd.DataFrame({"缺失指标": miss}), hide_index=True, width="stretch")
     else:
         st.success("该路径的全部三级指标均有评分记录。")
 
@@ -113,7 +115,7 @@ def render(session, rows: Sequence[PathRow], *, threshold: float = 0.8) -> None:
                 for r in comparable
             ]
         ).sort_values("基础加权分", ascending=False)
-        st.dataframe(df, hide_index=True, width="stretch")
+        data_table(df, hide_index=True, width="stretch")
         st.bar_chart(df.set_index("路径")["基础加权分"])
         st.caption("仅在状态为「可比较（非录取预测）」时才绘制，且不构成录取预测。")
 

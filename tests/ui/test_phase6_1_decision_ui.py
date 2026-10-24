@@ -89,14 +89,12 @@ def at_factory(p61_db_path, monkeypatch):
 
 
 @pytest.fixture
-def prod_db_path(tmp_path):
+def prod_db_path(tmp_path, research_migrated_db):
     """生产库的**只读副本**路径（含 Phase 5.0 北邮官方已核验证据）。
 
     生产库本身不入版本库；本地缺失时整组用例跳过，不做任何伪造。
     """
-    src = REPO_ROOT / "data" / "decision.db"
-    if not src.is_file():
-        pytest.skip(f"生产库不存在：{src}")
+    src = research_migrated_db
     dst = tmp_path / "prod_copy.db"
     shutil.copy2(src, dst)
     return dst
