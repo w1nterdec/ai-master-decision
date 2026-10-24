@@ -48,6 +48,9 @@ def bootstrap(db_path: Path, *, projection: bool = True) -> dict:
 
 
 def main() -> None:
+    # Windows redirected stdout may default to cp1252 even when all input files are UTF-8.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--db",

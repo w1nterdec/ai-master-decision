@@ -41,6 +41,7 @@
 - 320×740 浏览器：路径对比生成 **12 张完整字段卡片**、默认隐藏两张宽表；开启“使用完整交互表格”后两张表可见，并恢复列控制、搜索、CSV 下载；documentWidth=320。
 - 1440×1000 桌面布局另行检查，手机与桌面使用相同数据和控件状态。截图：[手机研究原文](../reports/mobile-research.jpg)、[桌面研究资料库](../reports/desktop-research.jpg)。
 - 本机未安装 Docker，容器构建与启动健康检查交由新增 GitHub Actions `container` job 验证，不能把本地 Python 运行当作容器验收。
+- 第一轮 GitHub 容器构建和健康检查通过；Windows runner 在初始化完成后因 cp1252 无法输出中文而失败。启动脚本显式输出 UTF-8，CI 统一使用 UTF-8 模式，并新增模拟西文输出编码的独立进程回归测试。
 
 ## 明确边界
 
