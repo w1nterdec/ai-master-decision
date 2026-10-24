@@ -10,16 +10,19 @@ from __future__ import annotations
 
 import datetime as _dt
 import json
+import os
+import tempfile
 from pathlib import Path
 from typing import Any, Iterable, Sequence
 
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.orm import Session
 
 from decision_system.models.entities import (
     AdmissionPath,
     AdmissionRecord,
     ClaimPathLink,
+    ClaimConflict,
     EvidenceClaim,
     EvidenceSource,
     Indicator,
@@ -66,7 +69,9 @@ from decision_system.ui.viewmodels import (
 # 本文件位于 <repo>/src/decision_system/services/view_service.py
 #   parents[0]=services  parents[1]=decision_system  parents[2]=src  parents[3]=<repo>
 ROOT = Path(__file__).resolve().parents[3]
-ARCHIVE_PATH = ROOT / "data" / "decision_profile.json"
+ARCHIVE_PATH = Path(
+    os.environ.get("DECISION_ARCHIVE_PATH", ROOT / "data" / "decision_profile.json")
+)
 
 
 def _now_text() -> str:
@@ -86,6 +91,26 @@ def build_evidence_summary(session: Session, path: AdmissionPath) -> EvidenceSum
     verified = candidate = pending = 0
     verified_2028 = 0
     source_ids: set[int] = set()
+    claim_ids = [link.claim_id for link in links]
+    conflict_rows = (
+        session.scalars(
+            select(ClaimConflict).where(
+                ClaimConflict.resolved.is_(False),
+                or_(
+                    ClaimConflict.claim_id.in_(claim_ids),
+                    ClaimConflict.conflicting_claim_id.in_(claim_ids),
+                ),
+            )
+        ).all()
+        if claim_ids
+        else []
+    )
+    conflicting_ids = {
+        cid
+        for row in conflict_rows
+        for cid in (row.claim_id, row.conflicting_claim_id)
+        if cid is not None
+    }
     for link in links:
         claim = session.get(EvidenceClaim, link.claim_id)
         if claim is None:
@@ -114,6 +139,7 @@ def build_evidence_summary(session: Session, path: AdmissionPath) -> EvidenceSum
                 source_type=str(src.source_type) if src else None,
                 url_or_file=src.url_or_file if src else None,
                 is_candidate=bool(claim.is_candidate),
+                has_conflict=claim.id in conflicting_ids,
             )
         )
 
@@ -127,8 +153,11 @@ def build_evidence_summary(session: Session, path: AdmissionPath) -> EvidenceSum
         elif src.verification_status is VerificationStatus.UNREGISTERED:
             unregistered += 1
 
+    conflicts = len(conflict_rows)
     total = len(items)
-    if total == 0:
+    if conflicts:
+        state = CONFLICT
+    elif total == 0:
         state = UNKNOWN
     elif verified and verified == total:
         state = VERIFIED
@@ -146,7 +175,7 @@ def build_evidence_summary(session: Session, path: AdmissionPath) -> EvidenceSum
         pending_claims=pending,
         verified_sources=verified_sources,
         unregistered_sources=unregistered,
-        conflicts=0,
+        conflicts=conflicts,
         verified_2028_claims=verified_2028,
         items=tuple(items),
         state=state,
@@ -252,7 +281,13 @@ def build_school_summaries(
         career_state = _eval_state(max(coverages) if coverages else None, threshold)
         risk_state = career_state  # 评分矩阵尚未分维度建立，保持一致口径
         verified_items = [
-            it for p in paths for it in p.evidence.items if it.status in VERIFIED_TEXTS
+            it
+            for p in paths
+            for it in p.evidence.items
+            if it.status in VERIFIED_TEXTS
+            and it.source_status in VERIFIED_TEXTS
+            and not it.is_candidate
+            and not it.has_conflict
         ]
         strengths = tuple(i.statement for i in verified_items[:3])
         risks: list[str] = []
@@ -268,7 +303,14 @@ def build_school_summaries(
             verified_sources=sum(p.evidence.verified_sources for p in paths),
             unregistered_sources=sum(p.evidence.unregistered_sources for p in paths),
             verified_2028_claims=sum(p.evidence.verified_2028_claims for p in paths),
-            state=(VERIFIED if verified_items else PENDING),
+            conflicts=sum(p.evidence.conflicts for p in paths),
+            state=(
+                CONFLICT
+                if any(p.evidence.conflicts for p in paths)
+                else VERIFIED
+                if verified_items
+                else PENDING
+            ),
             items=tuple(verified_items),
         )
         out.append(
@@ -309,7 +351,9 @@ def _school_region(session: Session, school_code: str) -> tuple[str | None, str 
 # ---------------------------------------------------------------------------
 # 多校对比
 # ---------------------------------------------------------------------------
-def _dimension_cell(session: Session, p: PathSummary, dim: str, l1: str | None) -> ComparisonCell:
+def _dimension_cell(
+    session: Session, p: PathSummary, dim: str, l1: str | None
+) -> ComparisonCell:
     if dim == "考试科目":
         return ComparisonCell(
             dim, p.exam_unit4 or UNKNOWN, judgeable=bool(p.exam_unit4)
@@ -326,9 +370,7 @@ def _dimension_cell(session: Session, p: PathSummary, dim: str, l1: str | None) 
         return ComparisonCell(dim, txt, judgeable=True)
     if dim == "调剂价值":
         if p.path_kind and "调剂" in str(p.path_kind):
-            return ComparisonCell(
-                dim, f"调剂路径 · {p.eligibility}", judgeable=True
-            )
+            return ComparisonCell(dim, f"调剂路径 · {p.eligibility}", judgeable=True)
         return ComparisonCell(dim, NOT_APPLICABLE, judgeable=False)
     if dim == "数据可信度":
         return ComparisonCell(dim, p.evidence.state, judgeable=True)
@@ -349,7 +391,9 @@ def build_comparison(
             (
                 dim,
                 tuple(
-                    ComparisonCell(c.dimension, c.text, c.judgeable, highlight and c.judgeable)
+                    ComparisonCell(
+                        c.dimension, c.text, c.judgeable, highlight and c.judgeable
+                    )
                     for c in cells
                 ),
             )
@@ -364,7 +408,9 @@ def build_comparison(
 def _fact_from_claim(item: ClaimItem) -> FactItem:
     """把展示用声明转成带分级的事实条目（不改变任何数据）。"""
     limitation: str | None = None
-    if item.source_status not in VERIFIED_TEXTS:
+    if item.has_conflict:
+        limitation = "存在未解决的来源冲突，不可作为已核实事实"
+    elif item.source_status not in VERIFIED_TEXTS:
         limitation = "来源未核验或无本体登记，不可作为决策依据"
     elif item.status not in VERIFIED_TEXTS:
         limitation = "声明未核验，不可作为决策依据"
@@ -524,10 +570,15 @@ def build_risk_summary(session: Session, p: PathSummary) -> RiskSummary:
     if p.quotas:
         first = first + (
             "历史名额（分口径）："
-            + "；".join(f"{q.year} {q.basis} 计划 {q.planned if q.planned is not None else UNKNOWN}" for q in p.quotas),
+            + "；".join(
+                f"{q.year} {q.basis} 计划 {q.planned if q.planned is not None else UNKNOWN}"
+                for q in p.quotas
+            ),
         )
     else:
-        first = first + ("历史名额：暂无数据（目录计划 / 统考计划 / 实际录取均无记录）",)
+        first = first + (
+            "历史名额：暂无数据（目录计划 / 统考计划 / 实际录取均无记录）",
+        )
     transfer = (
         "暂无足够证据支持调剂推荐"
         if not (p.path_kind and "调剂" in str(p.path_kind))
@@ -564,7 +615,14 @@ def build_path_decision_explanation(
     纯只读：不写数据库、不改引擎；解释依据全部来自已核验证据与资格闸门。
     """
     qual_ok, qual_reasons = explain_2028_qualification(session, path, year=2028)
-    verified_facts = [it.statement for it in p.evidence.items if it.status in VERIFIED_TEXTS]
+    verified_facts = [
+        it.statement
+        for it in p.evidence.items
+        if it.status in VERIFIED_TEXTS
+        and it.source_status in VERIFIED_TEXTS
+        and not it.is_candidate
+        and not it.has_conflict
+    ]
     if p.quotas:
         quota_state = "；".join(
             f"{q.year} {q.basis} 计划{q.planned if q.planned is not None else '暂无'}"
@@ -609,7 +667,19 @@ def load_archive() -> DecisionArchive:
 def save_archive(archive: DecisionArchive) -> Path:
     archive.updated_at = _now_text()
     ARCHIVE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    ARCHIVE_PATH.write_text(
-        json.dumps(archive.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    # A crash must not leave a truncated personal archive. Replace on the same volume.
+    payload = json.dumps(archive.to_dict(), ensure_ascii=False, indent=2)
+    temp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w", encoding="utf-8", dir=ARCHIVE_PATH.parent, delete=False
+        ) as fh:
+            temp_path = Path(fh.name)
+            fh.write(payload)
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(temp_path, ARCHIVE_PATH)
+    finally:
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
     return ARCHIVE_PATH

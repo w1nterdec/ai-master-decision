@@ -12,6 +12,8 @@ from __future__ import annotations
 from typing import Sequence
 
 import streamlit as st
+
+from decision_system.ui.theme import data_table
 from sqlalchemy import select
 
 from decision_system.models.entities import AdmissionPath, WeightProfile
@@ -81,6 +83,7 @@ def _focus_schools(
 
 
 def _render_focus(session, focus, *, threshold: float) -> None:
+    archive = get_archive()
     st.markdown("### 我重点研究的学校")
     if not focus:
         st.info(
@@ -136,6 +139,18 @@ def _render_focus(session, focus, *, threshold: float) -> None:
 
 def render(session, rows, *, profile_code: str, threshold: float = 0.8) -> None:
     st.subheader("决策驾驶舱")
+    from decision_system.ui.research_blocks import get_catalog
+
+    catalog = get_catalog()
+    if catalog is not None:
+        st.markdown("### 从研究到决策")
+        st.caption(f"已整理 {len(catalog.paths)} 条招生路径、{len(catalog.records)} 条研究映射。资料可搜索、按主题对比，并回查底稿行号。")
+        def navigate(page):
+            st.session_state["nav_page"] = page
+        c1, c2, c3 = st.columns(3)
+        c1.button("探索招生路径", on_click=navigate, args=("② 院校探索",), width="stretch")
+        c2.button("搜索研究资料", on_click=navigate, args=("⑧ 研究资料库",), width="stretch")
+        c3.button("对比候选路径", on_click=navigate, args=("③ 多校对比",), width="stretch")
     summaries = view_service.load_path_summaries(session, rows)
     schools = view_service.build_school_summaries(session, summaries, threshold=threshold)
 
@@ -161,7 +176,7 @@ def render(session, rows, *, profile_code: str, threshold: float = 0.8) -> None:
     if not confirmed:
         st.warning(
             "**当前没有任何路径取得 2028 正式资格。**\n\n"
-            "2028 招生目录尚未发布，库内 10 条路径均为**历史候选路径**。"
+            f"本地资料尚未收录可确认资格的 2028 招生目录，库内 {len(summaries)} 条路径均为**历史候选路径**。"
             "这不是故障，而是严格证据闸门的正确结果：历史招生事实不得冒充 2028。"
         )
     else:
@@ -222,7 +237,7 @@ def render(session, rows, *, profile_code: str, threshold: float = 0.8) -> None:
         }
         for p in summaries
     ]
-    st.dataframe(
+    data_table(
         table,
         hide_index=True,
         width="stretch",

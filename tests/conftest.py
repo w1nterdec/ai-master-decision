@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import importlib.util
+import shutil
 from pathlib import Path
 from typing import Iterator
 
@@ -29,6 +31,38 @@ from .fixtures import PHASE37C_ROWS, RAW_JSON, RAW_XLSX, code_of, make_tree
 VERIFICATION_YEAR = 2028
 SOURCE_ID = "SRC-TEST-001"
 PATH_KEY = "TEST|001|085410|全日制|方向01|2028|统考|一志愿"
+
+
+@pytest.fixture(scope="session")
+def research_baseline_db(tmp_path_factory):
+    """Recreate pre-migration state from tracked Excel; no ignored local backup needed."""
+    from decision_system.importers.excel_importer import import_excel
+
+    path = tmp_path_factory.mktemp("research_baseline") / "baseline.db"
+    engine = create_engine(f"sqlite:///{path}")
+    init_db(engine)
+    with sessionmaker(bind=engine)() as session:
+        import_excel(session, RAW_XLSX)
+        session.commit()
+    engine.dispose()
+    return path
+
+
+@pytest.fixture(scope="session")
+def research_migrated_db(tmp_path_factory, research_baseline_db):
+    """Replay tracked official evidence into an isolated database for all E2E tests."""
+    folder = tmp_path_factory.mktemp("research_migrated")
+    path = folder / "migrated.db"
+    shutil.copy2(research_baseline_db, path)
+    script = Path(__file__).resolve().parents[1] / "scripts" / "migrate_bupt_phase5_0.py"
+    spec = importlib.util.spec_from_file_location("test_research_migration", script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    module.DB_PATH = path
+    module.BACKUP_PATH = folder / "before.db"
+    result = module.run(apply=True)
+    assert not result["warnings"], result["warnings"]
+    return path
 
 
 @pytest.fixture(scope="session")

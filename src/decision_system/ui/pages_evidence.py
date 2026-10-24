@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import pandas as pd
 import streamlit as st
+
+from decision_system.ui.theme import data_table
 from sqlalchemy import select
 
 from decision_system.evidence.registry import EvidenceGovernanceError
@@ -143,7 +145,7 @@ def _render_register(session) -> None:
                 for s in rows[:200]
             ]
         )
-        st.dataframe(df, hide_index=True, width="stretch")
+        data_table(df, hide_index=True, width="stretch")
 
 
 # ---------------------------------------------------------------------------
@@ -286,7 +288,7 @@ def _render_verify(session) -> None:
                 for h in hist
             ]
         )
-        st.dataframe(df, hide_index=True, width="stretch")
+        data_table(df, hide_index=True, width="stretch")
 
 
 # ---------------------------------------------------------------------------
@@ -315,7 +317,7 @@ def _render_gap(session) -> None:
             {"指标": "状态为已核验但本体未登记", "数值": g["source_status_verified_only"] - g["source_verified"], "口径": "非法态计数，应为 0"},
         ]
     )
-    st.dataframe(df, hide_index=True, width="stretch")
+    data_table(df, hide_index=True, width="stretch")
     st.info(
         "说明：Phase 4.0 导入的 84 条来源中，83 条为「（引用自 Phase 3.2 候选映射）」式记录、"
         "1 条为 SRC-NA 占位符，**均无本体登记**，因此「已登记来源」为 0。"
