@@ -35,6 +35,7 @@ def _options(rows: Sequence[PathRow]) -> tuple[list[str], list[str], list[str]]:
 
 def render(session, rows: Sequence[PathRow]) -> None:
     st.subheader("招生路径")
+    st.caption("功能状态：本页提供只读筛选与核对；新增或修改招生路径需编辑原始 Excel，再运行初始化导入。网页尚无路径编辑表单。")
     if not rows:
         st.info("数据库中暂无招生路径。请先用 `python3 scripts/import_excel.py` 导入 Excel。")
         return

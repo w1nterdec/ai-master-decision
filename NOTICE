@@ -1,0 +1,16 @@
+ai-master-decision
+Copyright (c) 2026 ai-master-decision contributors
+
+Original project source code and original documentation are licensed under MIT.
+Third-party dependencies retain their own licenses.
+
+The MIT license does not grant rights to third-party content reproduced or
+referenced in data/raw/, data/school_research_consolidated.json, research
+reports, or screenshots. University notices, archived web text, attributed
+excerpts, and third-party material within compiled research retain the rights
+and terms of their respective owners. A publicly accessible source is not,
+by itself, permission to redistribute that source.
+
+No blanket open-data license is asserted for the research dataset. Check
+data/README.md and docs/DATA_PROVENANCE.md before reusing or redistributing it.
+No university affiliation or endorsement is implied.

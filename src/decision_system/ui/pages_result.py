@@ -159,6 +159,7 @@ def render(session=None, *, profile_code: str = "phase37c_demo") -> None:
     by_path = data.get("research_by_path", {})
     flat = data.get("research_flat", [])
     openq = data.get("open_questions", [])
+    st.caption("本页是历史案例的人工研究示例，不代表当前使用者的条件或系统对其作出的个性化结论。")
 
     # 顶部双层标识（贯穿全页）
     st.info(

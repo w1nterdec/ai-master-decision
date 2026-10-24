@@ -29,7 +29,7 @@ from decision_system.ui.blocks import (
 from decision_system.ui.formatting import pct, show_value
 from decision_system.ui.viewmodels import (
     QUAL_CONFIRMED,
-    USER_CONFIRMED_BACKGROUND,
+    EXAMPLE_BACKGROUND,
     PathSummary,
     SchoolSummary,
 )
@@ -118,8 +118,10 @@ def _render_focus(session, focus, *, threshold: float) -> None:
             if not gaps:
                 st.caption("该学校暂无阻断性数据缺口记录。")
             for g in gaps[:3]:
-                tag = "🔴" if g.priority_text == "高" else (
-                    "🟠" if g.priority_text == "中" else "🟡"
+                tag = (
+                    "🔴"
+                    if g.priority_text == "高"
+                    else ("🟠" if g.priority_text == "中" else "🟡")
                 )
                 st.markdown(f"{tag} **{g.topic}**（优先级：{g.priority_text}）")
                 st.caption(g.reason)
@@ -128,7 +130,9 @@ def _render_focus(session, focus, *, threshold: float) -> None:
                 "标为「可能改变选择」的项属于前提级信息。"
             )
             for p in paths:
-                st.markdown(f"- 我标记的路径：{path_label(p)}（{p.direction or '未分方向'}）")
+                st.markdown(
+                    f"- 我标记的路径：{path_label(p)}（{p.direction or '未分方向'}）"
+                )
                 orm_path = session.get(AdmissionPath, p.path_id)
                 if orm_path is not None:
                     expl = view_service.build_path_decision_explanation(
@@ -144,15 +148,27 @@ def render(session, rows, *, profile_code: str, threshold: float = 0.8) -> None:
     catalog = get_catalog()
     if catalog is not None:
         st.markdown("### 从研究到决策")
-        st.caption(f"已整理 {len(catalog.paths)} 条招生路径、{len(catalog.records)} 条研究映射。资料可搜索、按主题对比，并回查底稿行号。")
+        st.caption(
+            f"已整理 {len(catalog.paths)} 条招生路径、{len(catalog.records)} 条研究映射。资料可搜索、按主题对比，并回查底稿行号。"
+        )
+
         def navigate(page):
             st.session_state["nav_page"] = page
+
         c1, c2, c3 = st.columns(3)
-        c1.button("探索招生路径", on_click=navigate, args=("② 院校探索",), width="stretch")
-        c2.button("搜索研究资料", on_click=navigate, args=("⑧ 研究资料库",), width="stretch")
-        c3.button("对比候选路径", on_click=navigate, args=("③ 多校对比",), width="stretch")
+        c1.button(
+            "探索招生路径", on_click=navigate, args=("② 院校探索",), width="stretch"
+        )
+        c2.button(
+            "搜索研究资料", on_click=navigate, args=("⑧ 研究资料库",), width="stretch"
+        )
+        c3.button(
+            "对比候选路径", on_click=navigate, args=("③ 多校对比",), width="stretch"
+        )
     summaries = view_service.load_path_summaries(session, rows)
-    schools = view_service.build_school_summaries(session, summaries, threshold=threshold)
+    schools = view_service.build_school_summaries(
+        session, summaries, threshold=threshold
+    )
 
     if not summaries:
         st.info("数据库中暂无招生路径，请先导入数据（高级功能 → 数据维护）。")
@@ -191,7 +207,11 @@ def render(session, rows, *, profile_code: str, threshold: float = 0.8) -> None:
         st.success("未发现阻断性数据缺口。")
     else:
         for g in gaps[:3]:
-            tag = "🔴" if g.priority_text == "高" else ("🟠" if g.priority_text == "中" else "🟡")
+            tag = (
+                "🔴"
+                if g.priority_text == "高"
+                else ("🟠" if g.priority_text == "中" else "🟡")
+            )
             with st.container(border=True):
                 st.markdown(f"{tag} **{g.topic}**（优先级：{g.priority_text}）")
                 st.caption(g.reason)
@@ -212,16 +232,14 @@ def render(session, rows, *, profile_code: str, threshold: float = 0.8) -> None:
         _focus_schools(session, summaries, schools, archive),
         threshold=threshold,
     )
-    st.caption(
-        "「重点研究学校」由**你在档案中的标记**决定，系统不预先指定任何学校。"
-    )
+    st.caption("「重点研究学校」由**你在档案中的标记**决定，系统不预先指定任何学校。")
 
-    # --- 用户已确认背景 ---------------------------------------------------
-    with st.expander("我的决策前提（用户已确认，非系统推断）", expanded=False):
-        for k, v in USER_CONFIRMED_BACKGROUND:
+    # --- 公开示例背景 -----------------------------------------------------
+    with st.expander("示例场景前提（不代表当前使用者）", expanded=False):
+        for k, v in EXAMPLE_BACKGROUND:
             st.markdown(f"- **{k}**：{v}")
         st.caption(
-            "以上为用户在本项目中明确陈述的前提；系统不会替你改写，也不会据此推断录取概率。"
+            "以上为公开示例；你的条件请在我的决策档案填写。示例不自动成为你的硬约束，也不用于推断录取概率。"
         )
 
     # --- 路径状态速览 -----------------------------------------------------
@@ -242,8 +260,12 @@ def render(session, rows, *, profile_code: str, threshold: float = 0.8) -> None:
         hide_index=True,
         width="stretch",
         column_config={
-            "2028 资格": st.column_config.TextColumn(help="仅「已确认」才算取得 2028 正式资格"),
-            "有效覆盖率": st.column_config.TextColumn(help="有效证据权重 / 有权重指标总权重；未知不计入分子，也不冒充 0"),
+            "2028 资格": st.column_config.TextColumn(
+                help="仅「已确认」才算取得 2028 正式资格"
+            ),
+            "有效覆盖率": st.column_config.TextColumn(
+                help="有效证据权重 / 有权重指标总权重；未知不计入分子，也不冒充 0"
+            ),
         },
     )
     st.caption(

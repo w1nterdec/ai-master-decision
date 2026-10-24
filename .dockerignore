@@ -5,6 +5,12 @@ __pycache__
 data/*.db*
 data/backup
 data/decision_profile.json
+data/demo
+**/*.db
+**/*.db-*
+**/*.sqlite
+**/*.sqlite3
+**/decision_profile.json
 reports
 tests
 .env*

@@ -28,7 +28,7 @@ from decision_system.ui.blocks import (
 from decision_system.ui.formatting import pct, render_status, show_value
 from decision_system.ui.viewmodels import (
     QUAL_CONFIRMED,
-    USER_CONFIRMED_BACKGROUND,
+    EXAMPLE_BACKGROUND,
     PathSummary,
 )
 
@@ -58,8 +58,13 @@ def _render_hard(rs) -> None:
         st.caption("引擎未给出额外理由。")
 
 
-def render(session, rows, *, threshold: float = 0.8, profile_code: str = "phase37c_demo") -> None:
+def render(
+    session, rows, *, threshold: float = 0.8, profile_code: str = "phase37c_demo"
+) -> None:
     st.subheader("风险与路径规划")
+    st.info(
+        "功能状态：风险缺口与准备事项已实现。R7 调剂推荐算法、直接就业路径评分尚未实现，下面相关段落仅为说明，不是自动生成的方案。"
+    )
     summaries = view_service.load_path_summaries(session, rows)
     if not summaries:
         st.info("数据库中暂无招生路径。")
@@ -69,8 +74,8 @@ def render(session, rows, *, threshold: float = 0.8, profile_code: str = "phase3
         "本页面说明**风险与不确定性**，不提供录取概率、上岸率或任何形式的成功率估计。"
     )
     render_demo_weight_notice(profile_code)
-    with st.expander("本次风险判断的前提（用户已确认）", expanded=False):
-        for k, v in USER_CONFIRMED_BACKGROUND:
+    with st.expander("原案例风险政策（示例，需自行核对适用性）", expanded=False):
+        for k, v in EXAMPLE_BACKGROUND:
             st.markdown(f"- **{k}**：{v}")
 
     p = _pick(summaries)
@@ -155,12 +160,18 @@ def render(session, rows, *, threshold: float = 0.8, profile_code: str = "phase3
         st.success("该路径未发现阻断性数据缺口。")
     else:
         for g in rs.gaps:
-            tag = "🔴" if g.priority_text == "高" else ("🟠" if g.priority_text == "中" else "🟡")
+            tag = (
+                "🔴"
+                if g.priority_text == "高"
+                else ("🟠" if g.priority_text == "中" else "🟡")
+            )
             with st.container(border=True):
                 st.markdown(f"{tag} **{g.topic}**（优先级：{g.priority_text}）")
                 st.caption(g.reason)
                 if g.data_exists_but_unstructured:
-                    st.caption("类型：数据已存在但未结构化/未核验 → 可通过补登记与核验解决。")
+                    st.caption(
+                        "类型：数据已存在但未结构化/未核验 → 可通过补登记与核验解决。"
+                    )
                 else:
                     st.caption("类型：数据本身缺失 → 需要新增采集。")
 

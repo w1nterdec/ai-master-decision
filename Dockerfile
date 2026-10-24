@@ -1,13 +1,15 @@
 FROM python:3.12-slim
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 DECISION_DB_PATH=/state/decision.db DECISION_ARCHIVE_PATH=/state/decision_profile.json
-COPY pyproject.toml README.md ./
+COPY pyproject.toml README.md LICENSE NOTICE ./
 COPY src ./src
 RUN pip install --no-cache-dir -e .
 COPY app.py ./
 COPY scripts ./scripts
 COPY data/raw ./data/raw
-COPY data/school_research_consolidated.json ./data/
+COPY data/school_research_consolidated.json data/README.md ./data/
+COPY docs/DATA_PROVENANCE.md ./docs/
+COPY PRIVACY.md SECURITY.md ./
 COPY .streamlit ./.streamlit
 RUN useradd --create-home appuser && mkdir /state && chown appuser:appuser /state
 USER appuser

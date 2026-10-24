@@ -585,7 +585,7 @@ def build_risk_summary(session: Session, p: PathSummary) -> RiskSummary:
         else f"该路径为{p.path_kind}，是否接受取决于培养价值证据（当前{p.evidence.state}）"
     )
     employment = (
-        "方向：AI 工程 / LLM · Agent（用户已确认方向，非系统推断）",
+        "示例方向：AI 工程 / LLM · Agent（不代表当前使用者已确认）",
         "本模块仅提供风险情景说明与准备事项，不做就业预测",
     )
     return RiskSummary(
