@@ -57,12 +57,12 @@ COMPARE_DIMENSIONS: tuple[tuple[str, str | None], ...] = (
     ("AI 产业生态", "L1-地域生态"),
     ("学校与专业实力", "L1-研究培养"),
     ("培养与科研资源", "L1-研究培养"),
-    ("考试科目", None),          # 来自 AdmissionPath.exam_unit4
-    ("历史招生规模", None),       # 来自 AdmissionRecord
+    ("考试科目", None),  # 来自 AdmissionPath.exam_unit4
+    ("历史招生规模", None),  # 来自 AdmissionRecord
     ("复试风险", "L1-报考可行性"),
     ("学费与住宿", "L1-成本安排"),
-    ("调剂价值", None),          # 来自 path_kind + 硬约束（不做评分）
-    ("数据可信度", None),         # 来自证据统计
+    ("调剂价值", None),  # 来自 path_kind + 硬约束（不做评分）
+    ("数据可信度", None),  # 来自证据统计
 )
 
 
@@ -86,19 +86,22 @@ def v4_label(code: str) -> str:
     return code
 
 
-# 用户已确认的个人背景（**非系统推断**，仅用于展示上下文）。
-# 来源：用户在本项目中的明确陈述。任何一条都不得被系统改写或推断覆盖。
-USER_CONFIRMED_BACKGROUND: tuple[tuple[str, str], ...] = (
-    ("本科专业", "信息与计算科学"),
+# 从历史案例抽象的公开示例，不表示当前使用者的真实背景。
+# 只用于展示；本轮不改变引擎规则或给用户自动应用条件。
+EXAMPLE_BACKGROUND: tuple[tuple[str, str], ...] = (
+    ("本科专业", "数学或计算机相关专业（示例）"),
     ("目标方向", "AI 工程 / LLM · Agent"),
     ("长期方向", "具身智能 / 机器人"),
     ("考试机会", "仅一次正式考研机会，不二战"),
     ("数学科目", "接受数学一"),
     ("优先项", "培养价值 / 就业质量 / 学校与专业实力"),
-    ("地域倾向", "看重中国 AI 产业中心；不强制上海；过冷地区不优先"),
+    ("地域倾向", "按个人目标选择培养城市（示例）"),
     ("调剂态度", "仅在培养价值足够时考虑"),
     ("学费", "非绝对硬约束"),
 )
+
+# 保留旧名称供已有调用方导入；新界面使用 EXAMPLE_BACKGROUND。
+USER_CONFIRMED_BACKGROUND = EXAMPLE_BACKGROUND
 
 
 # ---------------------------------------------------------------------------
@@ -157,7 +160,7 @@ class QuotaItem:
     """名额口径条目：不同口径严格分列，不合并。"""
 
     year: int
-    basis: str          # 目录计划 / 复试统考计划 / 实际录取
+    basis: str  # 目录计划 / 复试统考计划 / 实际录取
     method: str
     planned: int | None
     actual: int | None
@@ -170,7 +173,7 @@ class PathSummary:
     """一条招生路径的展示视图（比较单位 = 路径，不是学校）。"""
 
     path_id: int
-    path_key: str                 # 仅高级功能展示
+    path_key: str  # 仅高级功能展示
     legacy_id: str | None
     school_name: str
     school_code: str
@@ -191,7 +194,7 @@ class PathSummary:
     notes: str | None
     evidence: EvidenceSummary
     quotas: tuple[QuotaItem, ...] = ()
-    decision: Any | None = None   # PathDecision，可能为 None
+    decision: Any | None = None  # PathDecision，可能为 None
     coverage: float | None = None
     unknown_indicators: tuple[str, ...] = ()
 
@@ -296,7 +299,7 @@ class ResearchDossier:
     grade_a: tuple[FactItem, ...] = ()
     grade_b: tuple[FactItem, ...] = ()
     grade_c: tuple[FactItem, ...] = ()
-    unknown_topics: tuple[str, ...] = ()   # D 类：尚未取得数据的指标/主题
+    unknown_topics: tuple[str, ...] = ()  # D 类：尚未取得数据的指标/主题
 
     @property
     def is_empty(self) -> bool:
@@ -339,7 +342,7 @@ class SchoolSummary:
 class ComparisonCell:
     dimension: str
     text: str
-    judgeable: bool          # 是否有足够证据判断
+    judgeable: bool  # 是否有足够证据判断
     highlight: bool = False  # 有足够证据的差异才高亮
 
 
@@ -391,13 +394,17 @@ class DecisionArchive:
 
     candidate_path_ids: list[int] = field(default_factory=list)
     favorite_path_ids: list[int] = field(default_factory=list)
-    excluded_path_ids: list[int] = field(default_factory=list)   # 暂不考虑
-    path_notes: dict[str, str] = field(default_factory=dict)     # {"<path_id>": "我的理由"}
+    excluded_path_ids: list[int] = field(default_factory=list)  # 暂不考虑
+    path_notes: dict[str, str] = field(
+        default_factory=dict
+    )  # {"<path_id>": "我的理由"}
     active_profile_code: str = "phase37c_demo"
     is_demo_profile: bool = True
     scenario_code: str | None = None
     notes: list[str] = field(default_factory=list)
     updated_at: str | None = None
+    personal_conditions: dict[str, str] = field(default_factory=dict)
+    planning_tiers: dict[str, str] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -410,6 +417,8 @@ class DecisionArchive:
             "scenario_code": self.scenario_code,
             "notes": list(self.notes),
             "updated_at": self.updated_at,
+            "personal_conditions": dict(self.personal_conditions),
+            "planning_tiers": dict(self.planning_tiers),
         }
 
     @classmethod
@@ -418,14 +427,22 @@ class DecisionArchive:
             candidate_path_ids=list(d.get("candidate_path_ids") or []),
             favorite_path_ids=list(d.get("favorite_path_ids") or []),
             excluded_path_ids=list(d.get("excluded_path_ids") or []),
-            path_notes={
-                str(k): str(v) for k, v in (d.get("path_notes") or {}).items()
-            },
+            path_notes={str(k): str(v) for k, v in (d.get("path_notes") or {}).items()},
             active_profile_code=str(d.get("active_profile_code") or "phase37c_demo"),
             is_demo_profile=bool(d.get("is_demo_profile", True)),
             scenario_code=d.get("scenario_code"),
             notes=list(d.get("notes") or []),
             updated_at=d.get("updated_at"),
+            personal_conditions={
+                str(k): str(v) for k, v in (d.get("personal_conditions") or {}).items()
+            },
+            planning_tiers={
+                str(k): str(v)
+                for k, v in (d.get("planning_tiers") or {}).items()
+                if str(k).isdigit()
+                and v in ("冲", "稳", "保")
+                and (d.get("path_notes") or {}).get(str(k), "").strip()
+            },
         )
 
     def note_of(self, path_id: int) -> str:
@@ -437,3 +454,16 @@ class DecisionArchive:
             self.path_notes[key] = text.strip()
         else:
             self.path_notes.pop(key, None)
+            self.planning_tiers.pop(key, None)
+
+    def set_planning_tier(self, path_id: int, tier: str, reason: str) -> None:
+        """A user's planning hypothesis, never an engine output or eligibility input."""
+        if tier not in ("冲", "稳", "保", "未分层"):
+            raise ValueError("只能选择冲、稳、保或未分层。")
+        if tier != "未分层" and not reason.strip():
+            raise ValueError("请填写分层理由与待核验前提，不能只贴冲稳保标签。")
+        if tier == "未分层":
+            self.planning_tiers.pop(str(path_id), None)
+        else:
+            self.planning_tiers[str(path_id)] = tier
+        self.set_note(path_id, reason)

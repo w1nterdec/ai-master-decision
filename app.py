@@ -32,6 +32,8 @@ from decision_system.ui import (
 from decision_system.ui.db_access import db_session
 from decision_system.ui.decision_view import load_path_rows
 from decision_system.ui.theme import apply_theme
+from decision_system.ui import onboarding
+from decision_system.engine.weights import WeightError
 
 DEFAULT_PROFILE = "phase37c_demo"
 
@@ -160,6 +162,7 @@ def main() -> None:
 
     st.session_state["nav_top"] = st.session_state.get("nav_page", PAGE_COCKPIT)
     st.selectbox("页面导航", MAIN_PAGES, key="nav_top", on_change=from_top)
+    onboarding.render()
     with st.expander("阅读设置", expanded=False):
         st.toggle(
             "使用完整交互表格",
@@ -183,7 +186,27 @@ def main() -> None:
         "输出不含录取概率，不构成录取预测或院校排名。"
     )
 
-    render_current_page()
+    try:
+        render_current_page()
+    except WeightError as exc:
+        st.error(f"权重配置异常，无法生成决策：{exc}")
+        st.info(
+            "请备份数据库后核对异常配置，或用独立演示空间验证安装。系统不会以默认均分替代异常权重。"
+        )
+    except ValueError as exc:
+        if not str(exc).startswith("权重配置不存在："):
+            raise
+        st.error(str(exc))
+        st.info(
+            "当前配置不存在。可切回默认演示配置；若数据尚未初始化，请运行 python scripts/start.py --demo。"
+        )
+
+        def use_demo_profile():
+            st.session_state["active_profile"] = DEFAULT_PROFILE
+
+        st.button(
+            "切回默认演示配置", key="recover_demo_profile", on_click=use_demo_profile
+        )
     st.markdown("---")
     st.caption(
         "历史研究信息 ≠ 2028 正式决策依据；未知值一律显示为"

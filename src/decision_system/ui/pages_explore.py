@@ -24,6 +24,7 @@ from decision_system.ui.blocks import (
     render_evidence_list,
     render_path_facts,
     render_qualification,
+    render_path_readiness,
     render_quotas,
     render_research_dossier,
     render_unknown,
@@ -109,6 +110,7 @@ def _path_detail(session, p: PathSummary) -> None:
     render_path_facts(p)
     st.markdown("**资格与硬约束**")
     render_qualification(p)
+    render_path_readiness(p)
     render_path_research(p.legacy_id, key=f"explore_research_{p.path_id}")
 
     with st.expander("招生名额（分口径）", expanded=False):

@@ -161,6 +161,39 @@ def render_qualification(p: PathSummary) -> None:
         )
 
 
+def render_path_readiness(p: PathSummary) -> None:
+    """Explain existing engine results without introducing a recommendation rule."""
+    with st.expander("看懂当前结论：依据、缺口与风险", expanded=False):
+        st.write(f"正式资格：{p.qualification_2028}；硬约束：{p.eligibility}。")
+        st.caption(
+            f"关联声明 {p.evidence.total_claims} 条，声明已核验 {p.evidence.verified_claims} 条，未解决冲突关联 {p.evidence.conflicts} 条；正式有效性还须核对来源、适用年份和指标。"
+        )
+        if p.decision is not None:
+            coverage = p.decision.coverage
+            if coverage.base_weight_coverage < coverage.threshold:
+                st.warning(
+                    f"有效证据覆盖率 {coverage.base_weight_coverage:.0%}，低于门槛 {coverage.threshold:.0%}。请补充证据与有效评分，不能靠降低门槛得到可靠结论。"
+                )
+            for label, outcome in (
+                ("培养与职业价值", p.decision.objective_a),
+                ("一志愿投入价值", p.decision.objective_b),
+            ):
+                st.markdown(f"**{label}：{outcome.status.value}**")
+                for reason in outcome.reasons:
+                    st.write("- " + reason)
+        st.markdown("**尚缺有效依据的指标**")
+        if p.unknown_indicators:
+            for name in p.unknown_indicators:
+                st.write("- " + name)
+        else:
+            st.caption("当前未列出未知指标；仍需核对资格与来源状态。")
+        st.markdown("**已记录的路径风险**")
+        st.write(p.key_risk or "尚无风险记录，不代表风险低。")
+        st.caption(
+            "若显示值得继续研究，含义是继续核验的理由，不是正式报考建议。原文可在历史研究资料中回查。"
+        )
+
+
 def render_path_facts(p: PathSummary) -> None:
     rows = [
         {"项目": "考试科目（第四单元）", "内容": show_value(p.exam_unit4)},
@@ -422,7 +455,7 @@ def render_decision_explanation(
         for r in ly.reasons:
             st.markdown(f"&nbsp;&nbsp;- {r}")
 
-    with st.expander("查看全局决策政策（用户已确认，非系统推断）", expanded=False):
+    with st.expander("查看原案例决策政策（示例，非当前用户确认）", expanded=False):
         for g in expl.global_policy:
             st.markdown(f"- {g}")
     if expl.gaps:

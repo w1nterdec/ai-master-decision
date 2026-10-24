@@ -3,7 +3,7 @@
 设计原则（见 docs/V4_MODEL_SEMANTIC_AUDIT.md 审计 A-02..A-11）：
     * 本层**只解释**，不重算分数、不引入新权重；所有输入来自
       engine / decision_service / view_service / viewmodels。
-    * 用户「仅一次正式考研机会、不二战」是**全局决策政策**，不是某所学校的属性
+    * 原案例的「仅一次正式考研机会、不二战」是**示例全局决策政策**，不是当前用户的默认事实或某所学校的属性
       （修复 A-02）：它贯穿失败后备路径评估，且「落空后果」被显式建模为终局性代价
       （修复 A-03），而非可调低的风险权重。
     * 动态权重（情景倍率）只在第四层用于**可补偿因素**的比较，且必须区分
@@ -30,7 +30,7 @@ from decision_system.ui.viewmodels import (
     USER_CONFIRMED_BACKGROUND,
 )
 
-# 用户已确认的全局决策政策（非系统推断，来自 USER_CONFIRMED_BACKGROUND）。
+# 历史案例的示例全局决策政策；不表示当前使用者已确认这些条件。
 GLOBAL_POLICY_NO_SECOND_TRY = (
     "仅一次正式考研机会，不二战：一志愿失败的代价是终局性的（无硕士可读），"
     "不能仅用「概率低一点」的风险权重来表达。"

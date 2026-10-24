@@ -27,13 +27,17 @@ from decision_system.ui.blocks import (
 )
 from decision_system.ui.formatting import pct, render_status
 from decision_system.ui.viewmodels import (
-    USER_CONFIRMED_BACKGROUND,
+    EXAMPLE_BACKGROUND,
     PathSummary,
 )
 
 
 def _profile_rows(session) -> list[dict[str, str]]:
-    profiles = session.execute(select(WeightProfile).order_by(WeightProfile.id)).scalars().all()
+    profiles = (
+        session.execute(select(WeightProfile).order_by(WeightProfile.id))
+        .scalars()
+        .all()
+    )
     return [
         {
             "配置代码": p.code,
@@ -61,10 +65,13 @@ def _build_markdown(
     lines.append("> 本档案**不含录取概率**，也**不构成院校排名**。")
     lines.append("")
 
-    lines.append("## 一、决策前提（用户已确认，非系统推断）")
+    lines.append("## 一、决策前提（本人录入，仅作上下文）")
     lines.append("")
-    for k, v in USER_CONFIRMED_BACKGROUND:
+    if not archive.personal_conditions:
+        lines.append("尚未录入个人条件；原始案例背景不代表当前使用者。")
+    for k, v in archive.personal_conditions.items():
         lines.append(f"- **{k}**：{v}")
+    lines.append("> 个人条件仅作记录，不自动改写引擎约束、权重或原案例政策。")
     lines.append("")
 
     lines.append("## 二、候选路径")
@@ -155,8 +162,23 @@ def _build_markdown(
     lines.append("")
     lines.append(
         "> 可比较路径为 0 是当前证据状态下的**正确结果**："
-        "2028 目录未发布，且尚无有效评分，系统不会强行给出排序。"
+        "本地快照可能缺少已核验的 2028 资料或有效评分，系统不会强行给出排序。"
     )
+    lines.extend(
+        [
+            "",
+            "## 七、个人备考分层（人工假设）",
+            "",
+            "> 冲稳保为本人记录，非系统推荐；保不代表保证录取，不参与评分或资格判定。",
+        ]
+    )
+    for pid, tier in archive.planning_tiers.items():
+        path = by_id.get(int(pid))
+        lines.append(
+            f"- {path_label(path) if path else f'路径 #{pid}'}：{tier}；理由：{archive.note_of(int(pid))}"
+        )
+    if not archive.planning_tiers:
+        lines.append("- 尚未进行人工分层。")
     lines.append("")
     return "\n".join(lines)
 
@@ -172,9 +194,70 @@ def render(session, rows, *, profile_code: str) -> None:
         "　|　仅保存你的标记与备注，**不修改数据库结构**。"
     )
 
-    st.markdown("### 决策前提（用户已确认，非系统推断）")
-    for k, v in USER_CONFIRMED_BACKGROUND:
-        st.markdown(f"- **{k}**：{v}")
+    st.markdown("### 我的个人条件")
+    st.info(
+        "个人条件用于记录与复盘，不会自动改写引擎硬约束、偏好权重或原案例政策。修改权重请到动态决策树；路径资格仍须逐条核验。"
+    )
+    with st.form("personal_conditions_form"):
+        conditions = {}
+        for field_name in (
+            "本科专业",
+            "目标方向",
+            "意向城市",
+            "可接受专业代码",
+            "预算与其他限制",
+        ):
+            conditions[field_name] = st.text_input(
+                field_name,
+                value=archive.personal_conditions.get(field_name, ""),
+                max_chars=1000,
+                key=f"personal_{field_name}",
+            )
+        if st.form_submit_button("保存个人条件"):
+            archive.personal_conditions = {
+                k: v.strip() for k, v in conditions.items() if v.strip()
+            }
+            persist_archive()
+            st.success("个人条件已保存，仅作决策上下文。")
+    with st.expander("示例背景（仅供参照，不代表新用户）", expanded=False):
+        for k, v in EXAMPLE_BACKGROUND:
+            st.markdown(f"- **{k}**：{v}")
+
+    st.markdown("### 个人备考分层（人工记录）")
+    st.caption(
+        "当前没有自动冲稳保算法。你可按已读证据记录自己的备考假设；“保”不代表保证录取。所有标签都不参与资格判定或评分。"
+    )
+    if summaries:
+        pid = st.selectbox(
+            "选择要记录分层的路径",
+            list(by_id),
+            format_func=lambda value: path_label(by_id[value]),
+            key="planning_path",
+        )
+        tiers = ["未分层", "冲", "稳", "保"]
+        with st.form(f"planning_form_{pid}"):
+            tier = st.selectbox(
+                "个人备考分层",
+                tiers,
+                index=tiers.index(archive.planning_tiers.get(str(pid), "未分层")),
+                key=f"planning_tier_{pid}",
+            )
+            reason = st.text_area(
+                "分层理由与待核验前提",
+                value=archive.note_of(pid),
+                max_chars=5000,
+                key=f"planning_reason_{pid}",
+            )
+            if st.form_submit_button("保存人工分层"):
+                try:
+                    archive.set_planning_tier(pid, tier, reason)
+                except ValueError as exc:
+                    st.error(str(exc))
+                else:
+                    persist_archive()
+                    st.success("已保存人工假设，未改变任何引擎结论。")
+    else:
+        st.info("暂无招生路径。可用 python scripts/start.py --demo 启动独立演示。")
 
     st.markdown("### 候选路径")
     if archive.candidate_path_ids:
@@ -230,9 +313,7 @@ def render(session, rows, *, profile_code: str) -> None:
     st.markdown("### 权重配置状态")
     profile_rows = _profile_rows(session)
     data_table(profile_rows, hide_index=True, width="stretch")
-    st.caption(
-        "演示配置 ≠ 你的偏好。确认动作在「动态决策树 → 配置管理」中完成。"
-    )
+    st.caption("演示配置 ≠ 你的偏好。确认动作在「动态决策树 → 配置管理」中完成。")
 
     st.markdown("### 备注")
     note = st.text_area("新增一条备注", key="prof_note", height=80)

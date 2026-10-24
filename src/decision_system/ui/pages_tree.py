@@ -108,7 +108,11 @@ def _render_adjust(session, profile_code: str, profile: WeightProfile) -> None:
         after = preview.global_weights().get(code, 0.0)
         c1, c2 = st.columns(2)
         c1.metric("全局权重（当前）", f"{before * 100:.2f}%")
-        c2.metric("全局权重（调整后）", f"{after * 100:.2f}%", f"{(after - before) * 100:+.2f} pct")
+        c2.metric(
+            "全局权重（调整后）",
+            f"{after * 100:.2f}%",
+            f"{(after - before) * 100:+.2f} pct",
+        )
         st.caption("以上为**未落库预览**；点击下方按钮才会写入。")
 
         reason = st.text_input("修改理由（写入审计日志，可留空）", key="tree_reason")
@@ -184,8 +188,12 @@ def _render_profile_admin(session, profile_code: str) -> None:
     data_table(pd.DataFrame(rows), hide_index=True, width="stretch")
 
     with st.expander("从当前配置派生一个用户版本", expanded=False):
-        new_code = st.text_input("新配置代码", value="my_preference_v1", key="tree_new_code")
-        new_name = st.text_input("新配置名称", value="我的偏好（待确认）", key="tree_new_name")
+        new_code = st.text_input(
+            "新配置代码", value="my_preference_v1", key="tree_new_code"
+        )
+        new_name = st.text_input(
+            "新配置名称", value="我的偏好（待确认）", key="tree_new_name"
+        )
         if st.button("派生", key="tree_clone"):
             try:
                 profile_service.clone_profile(
@@ -254,6 +262,19 @@ def render(session, rows, *, profile_code: str) -> None:
         st.error(f"权重配置不存在：{profile_code}")
         return
 
+    profiles = profile_service.list_profiles(session)
+    st.session_state["tree_active_profile"] = profile_code
+
+    def change_active_profile():
+        st.session_state["active_profile"] = st.session_state["tree_active_profile"]
+
+    st.selectbox(
+        "当前偏好配置",
+        [p.code for p in profiles],
+        key="tree_active_profile",
+        on_change=change_active_profile,
+    )
+
     if profile.is_demo:
         st.warning(
             f"当前配置 `{profile_code}` 为**演示配置（is_demo=True）**，"
@@ -266,6 +287,13 @@ def render(session, rows, *, profile_code: str) -> None:
     st.caption(
         "维度顺序按千问 V4.0 五维排列；库内指标 code / 名称 / 层级**未做任何改动**。"
     )
+    tree = build_weight_tree(session, profile_code)
+    if tree.empty_groups:
+        st.warning(
+            "权重异常提示：存在组内权重合计为 0 的分组："
+            + "、".join(tree.empty_groups)
+            + "。这些分组会按规则保持零权重，不会自动均分；请核对是否符合你的偏好。"
+        )
 
     st.markdown("### 指标树与当前权重")
     df = _tree_table(session, profile_code)
