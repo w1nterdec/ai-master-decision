@@ -4,6 +4,7 @@ __pycache__
 .pytest_cache
 data/*.db*
 data/backup
+backups
 data/decision_profile.json
 data/demo
 **/*.db

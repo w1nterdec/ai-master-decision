@@ -91,6 +91,8 @@ docker compose up --build -d
 
 容器声明依赖、原件、JSON、主题、启动命令和健康检查齐全。CI 同时检查 HTTP 健康与容器内真实页面渲染，健康接口正常本身不代表全部页面正常。Docker daemon 需要运行。数据不会同步到另一台独立实例。
 
+需要电脑关机后手机仍可访问，可按 [持续服务器部署指南](docs/SERVER_DEPLOYMENT.md) 使用云服务器和域名。新增 `compose.server.yaml` 与 `deploy/Caddyfile` 提供 HTTPS、入口密码、数据持久化和自动重启；先复制 `deploy/server.env.example` 为服务器的 `.env` 并填写域名和密码哈希。该配置单独使用，只公开 80/443，不公开应用端口；所有获准访问者仍共用一份档案。
+
 ## 目录结构
 
 ```text

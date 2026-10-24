@@ -55,6 +55,31 @@ jobs:
           exit 1
       - name: Render actual container pages
         run: docker exec decision-test python scripts/smoke_app.py
+      - name: Verify server HTTPS and authentication
+        shell: bash
+        run: |
+          export APP_DOMAIN=localhost BASIC_AUTH_USER=ci
+          password=$(openssl rand -hex 24)
+          export BASIC_AUTH_PASSWORD_HASH
+          BASIC_AUTH_PASSWORD_HASH=$(docker run --rm caddy:2.10-alpine caddy hash-password --plaintext "$password")
+          if BASIC_AUTH_PASSWORD_HASH='' docker compose -f compose.server.yaml config --quiet >/dev/null 2>&1; then
+            echo 'Server configuration incorrectly accepts an empty password hash'
+            exit 1
+          fi
+          docker compose -f compose.server.yaml config --quiet
+          trap 'docker compose -f compose.server.yaml logs --tail=80; docker compose -f compose.server.yaml down' EXIT
+          docker compose -f compose.server.yaml up --build -d --wait --wait-timeout 180
+          docker compose -f compose.server.yaml exec -T caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+          # Only CI uses a local Caddy CA; real deployment must use trusted HTTPS.
+          for attempt in $(seq 1 30); do
+            status=$(curl --insecure --silent --output /dev/null --write-out '%{http_code}' https://localhost || true)
+            if [ "$status" = 401 ]; then break; fi
+            sleep 2
+          done
+          test "$status" = 401
+          test "$(curl --insecure --silent --output /dev/null --write-out '%{http_code}' -u "ci:$password" https://localhost)" = 200
+          test "$(curl --insecure --silent --output /dev/null --write-out '%{http_code}' -u 'ci:wrong-password' https://localhost)" = 401
+          test "$(docker inspect --format '{{len .HostConfig.PortBindings}}' "$(docker compose -f compose.server.yaml ps -q app)")" = 0
       - name: Container logs
         if: always()
         run: docker logs decision-test
