@@ -4,6 +4,8 @@
 
 **让择校判断有迹可循**
 
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white) ![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?logo=streamlit&logoColor=white) ![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white)
+
 研究资料 · 路径比较 · 证据核验 · 个人决策
 
 [快速开始](#5-分钟快速开始) · [新手指南](docs/GETTING_STARTED.md) · [服务器部署](docs/SERVER_DEPLOYMENT.md)
